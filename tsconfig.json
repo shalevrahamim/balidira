@@ -11,7 +11,7 @@
     "declaration": false,
     "rootDir": "./src"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/puppeteer.js", "src/puppeteer.js"],
   "exclude": ["node_modules"]
 }
 

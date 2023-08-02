@@ -4,7 +4,7 @@
   "description": "A simple web service",
   "main": "src/server.ts",
   "scripts": {
-    "start": "ts-node src/server.ts",
+    "start": "ts-node src/index.js",
     "build": "tsc"
   },
   "keywords": [],
@@ -12,7 +12,9 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
+    "node-telegram-bot-api": "^0.61.0",
     "pg": "^8.7.1",
+    "puppeteer": "^20.9.0",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.38"
   },
