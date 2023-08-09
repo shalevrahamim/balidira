@@ -41,7 +41,6 @@ const states = {
 bot.on('message', (msg) => {
   const chatId = msg.chat.id;
   const messageText = msg.text;
-  console.log(messageText)
   switch (messageText) {
     case '/start':
         const options = {
@@ -50,6 +49,7 @@ bot.on('message', (msg) => {
           },
         };
         bot.sendMessage(chatId, translation.welcome, options);
+        moveToState(chatId, states.WELCOME, true);
         break;
     default:
       // Process user input based on the current state
@@ -62,11 +62,12 @@ function getUpdatedInlineKeyboard(options, type, selectedOption, chatId) {
   const cloneOptions = JSON.parse(JSON.stringify(options));  
   cloneOptions.forEach((rowOptions) => {
       rowOptions.forEach((option) => {
-        const isMarked = !!chatStates[chatId]?.[type]?.[option.callback_data];
+        const userPreferences = chatStates[chatId].preferences;
+        const isMarked = !!userPreferences?.[type]?.[option.callback_data];
         if (option.callback_data === selectedOption) {
           option.text = isMarked ? option.text :`✅ ${option.text}`;
-          chatStates[chatId][type] = {
-            ...(chatStates[chatId][type] || {}),
+          userPreferences[type] = {
+            ...(userPreferences[type] || {}),
             [selectedOption]: !isMarked
           }
         }
@@ -83,8 +84,8 @@ function getUpdatedInlineKeyboard(options, type, selectedOption, chatId) {
 bot.on('callback_query', (query) => {
     const chatId = query.message.chat.id;
     const selectedOption = query.data;
-    const currentState = chatStates[chatId].state;
-
+    const userPreferences = chatStates[chatId].preferences;
+    const currentState = userPreferences.state;
     switch(currentState){
       case states.WELCOME:
         if(selectedOption == "yes") {
@@ -145,16 +146,19 @@ bot.on('callback_query', (query) => {
 
 });
 
-const moveToState = (chatId, state) => {
-  const userPreferences = chatStates[chatId];
+const moveToState = async (chatId, state, cleanPreferences) => {
+  const userPreferences = cleanPreferences ? {} : chatStates[chatId]?.preferences || {};
   userPreferences.state = state;
-  DB.createOrUpdateUser({chatId, preferences: userPreferences})
+  const user = await DB.createOrUpdateUser({chatId, preferences: userPreferences})
+  chatStates[chatId] = user;
+  console.log(chatStates);
+
 }
 
 // Function to process user input based on the current state
 const processUserInput = (chatId, messageText) => {
-  const currentState = chatStates[chatId].state;
-  console.log(chatStates)
+  const userPreferences = chatStates[chatId].preferences;
+  const currentState = userPreferences.state;
   switch (currentState) {
     case states.NAME:
       const options = {
@@ -163,17 +167,27 @@ const processUserInput = (chatId, messageText) => {
           inline_keyboard: citiesOptions
         },
       };
-      chatStates[chatId].name = messageText;
-      bot.sendMessage(chatId, translation.whichCity(chatStates[chatId].name), options);
+      userPreferences.name = messageText;
+      bot.sendMessage(chatId, translation.whichCity(userPreferences.name), options);
       moveToState(chatId, states.CITY_MULTISELECT);  
   }
 };
 
-// Object to store chat states
-const chatStates = {};
+const arrayToObj = (arr, key) => {
+  return arr.reduce((acc, curr) => {
+    acc[curr[key]] = curr;
+    return acc;
+  }, {});
+}
+
+let chatStates = {};
+DB.getAllUsers().then((users) => {
+  chatStates = arrayToObj(users, 'chat_id')
+  console.log(chatStates);
+});
 
 // Start the bot
-bot.onText(/\/start/, (msg) => {
-  const chatId = msg.chat.id;
-  chatStates[chatId] = { state: states.WELCOME };
-});
+// bot.onText(/\/start/, (msg) => {
+//   const chatId = msg.chat.id;
+//   moveToState(chatId, states.WELCOME)
+// });

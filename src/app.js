@@ -48,7 +48,7 @@ module.exports.createOrUpdateUser = async ({ chatId, preferences }) => {
       user = await User.create(newUser);
       console.log('New user created:', user.toJSON());
     }
-    
+    console.log('user updated')
     return user.toJSON();
   } catch (error) {
     console.error('Error creating/updating user:', error);
@@ -59,8 +59,7 @@ module.exports.createOrUpdateUser = async ({ chatId, preferences }) => {
 module.exports.getAllUsers = async () => {
   try {
     const allUsers = await User.findAll();
-    console.log('All users:', allUsers.map(user => user.toJSON()));
-    return allUsers;
+    return allUsers.map(user => user.toJSON());
   } catch (error) {
     console.error('Error fetching all users:', error);
     return [];
