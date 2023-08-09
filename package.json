@@ -1,13 +1,12 @@
 {
-  "name": "your_project",
+  "name": "balidira",
   "version": "1.0.0",
-  "description": "A simple web service",
-  "main": "src/server.ts",
+  "description": "A Telegram bot-driven service for personalized apartment listings, leveraging Node.js, Sequelize ORM, and Postgres for optimized user-centric apartment hunting experience",
   "scripts": {
-    "start": "node src/telegram.js",
-    "build": "tsc"
+    "start:puppeteer": "node src/puppeteer.js",
+    "start:telegram": "node src/telegram.js"
   },
-  "keywords": [],
+  "keywords": ["balidira", "apartment", "experiment"],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -15,15 +14,8 @@
     "node-telegram-bot-api": "^0.61.0",
     "pg": "^8.11.2",
     "puppeteer": "^20.9.0",
-    "reflect-metadata": "^0.1.13",
     "sequelize": "^6.32.1",
-    "sequelize-cli": "^6.6.1",
-    "typeorm": "^0.2.38"
+    "sequelize-cli": "^6.6.1"
   },
-  "devDependencies": {
-    "@types/express": "^4.17.13",
-    "@types/node": "^16.7.13",
-    "ts-node": "^10.9.1",
-    "typescript": "^4.4.3"
-  }
+  "devDependencies": {}
 }
