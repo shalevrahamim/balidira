@@ -1,5 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const translation = require('./translation.js');
+const DB = require('./app.js');
 
 const citiesOptions = [
   [{ text: 'תל אביב', callback_data: 'tlv' }, { text: 'פתח תקווה', callback_data: 'ptct' }],
@@ -22,7 +23,7 @@ const priceRentOptions = [
 ];
 
 // Replace 'YOUR_TELEGRAM_BOT_TOKEN' with your actual bot token
-const botToken = '6643199401:AAE3bsiGezBO-yEVpoxGy3KiOxXEpTsD860';
+const botToken = '6643199401:AAEduMJPbLPB96ahx6j_4NynZJQ3bgOSNvQ';
 const bot = new TelegramBot(botToken, { polling: true });
 // States for conversation
 const states = {
@@ -88,7 +89,7 @@ bot.on('callback_query', (query) => {
       case states.WELCOME:
         if(selectedOption == "yes") {
           bot.sendMessage(chatId, translation.whatIsYourName);
-          chatStates[chatId].state = states.NAME;
+          moveToState(chatId, states.NAME);
         }
         break;
       case states.CITY_MULTISELECT:
@@ -106,7 +107,7 @@ bot.on('callback_query', (query) => {
             },
           };
           bot.sendMessage(chatId, translation.howMuchRoom, options);
-          chatStates[chatId].state = states.ROOMS_MULTISELECT;
+          moveToState(chatId, states.ROOMS_MULTISELECT);
         }
         break;
         case states.ROOMS_MULTISELECT:
@@ -124,7 +125,7 @@ bot.on('callback_query', (query) => {
               },
             };
             bot.sendMessage(chatId, translation.howMuchPrice, options);
-            chatStates[chatId].state = states.PRICE_MULTISELECT;
+            moveToState(chatId, states.PRICE_MULTISELECT);
           }
           break;
         case states.PRICE_MULTISELECT:
@@ -137,17 +138,23 @@ bot.on('callback_query', (query) => {
           }
           else{
             bot.sendMessage(chatId, translation.gettingStarted);
-            chatStates[chatId].state = states.DONE;
+            moveToState(chatId, states.DONE);
           }
           break;
     }
 
 });
 
+const moveToState = (chatId, state) => {
+  const userPreferences = chatStates[chatId];
+  userPreferences.state = state;
+  DB.createOrUpdateUser({chatId, preferences: userPreferences})
+}
+
 // Function to process user input based on the current state
 const processUserInput = (chatId, messageText) => {
   const currentState = chatStates[chatId].state;
-
+  console.log(chatStates)
   switch (currentState) {
     case states.NAME:
       const options = {
@@ -158,7 +165,7 @@ const processUserInput = (chatId, messageText) => {
       };
       chatStates[chatId].name = messageText;
       bot.sendMessage(chatId, translation.whichCity(chatStates[chatId].name), options);
-      chatStates[chatId].state = states.CITY_MULTISELECT;  
+      moveToState(chatId, states.CITY_MULTISELECT);  
   }
 };
 

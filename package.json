@@ -4,7 +4,7 @@
   "description": "A simple web service",
   "main": "src/server.ts",
   "scripts": {
-    "start": "ts-node src/index.js",
+    "start": "node src/telegram.js",
     "build": "tsc"
   },
   "keywords": [],
@@ -13,9 +13,11 @@
   "dependencies": {
     "express": "^4.17.1",
     "node-telegram-bot-api": "^0.61.0",
-    "pg": "^8.7.1",
+    "pg": "^8.11.2",
     "puppeteer": "^20.9.0",
     "reflect-metadata": "^0.1.13",
+    "sequelize": "^6.32.1",
+    "sequelize-cli": "^6.6.1",
     "typeorm": "^0.2.38"
   },
   "devDependencies": {

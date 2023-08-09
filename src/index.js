@@ -61,7 +61,7 @@ const puppeteer = require('puppeteer');
     }
 
     // Wait for a while to see the result of the click
-    await page.waitForTimeout(25000); // Adjust the waiting time as needed
+    await page.waitForTimeout(3000); // Adjust the waiting time as needed
 
 
 
@@ -73,7 +73,7 @@ const puppeteer = require('puppeteer');
 
 
     const divSelector = 'div[role="feed"]'; // Selector for the div with role="feed"
-    await page.waitForTimeout(15000);
+    await page.waitForTimeout(2000);
   
     const nestedElements = await page.evaluate((selector) => {
       const feedDiv = document.querySelector(selector);
@@ -94,7 +94,7 @@ const puppeteer = require('puppeteer');
       return processElement(feedDiv);
     }, divSelector);
   
-    console.log(nestedElements);
+    console.log(nestedElements.children.map(child => child.text));
   
 
 
