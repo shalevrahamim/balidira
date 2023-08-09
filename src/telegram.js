@@ -1,6 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const translation = require('./translation.js');
-const DB = require('./app.js');
+const DB = require('./db.js');
 
 const citiesOptions = [
   [{ text: 'תל אביב', callback_data: 'tlv' }, { text: 'פתח תקווה', callback_data: 'ptct' }],
