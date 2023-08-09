@@ -6,16 +6,20 @@
     "start:puppeteer": "node src/puppeteer.js",
     "start:telegram": "node src/telegram.js"
   },
-  "keywords": ["balidira", "apartment", "experiment"],
+  "keywords": [
+    "balidira",
+    "apartment",
+    "experiment"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.7.2",
     "express": "^4.17.1",
     "node-telegram-bot-api": "^0.61.0",
     "pg": "^8.11.2",
     "puppeteer": "^20.9.0",
     "sequelize": "^6.32.1",
     "sequelize-cli": "^6.6.1"
-  },
-  "devDependencies": {}
+  }
 }
