@@ -1,148 +1,167 @@
-const TelegramBot = require('node-telegram-bot-api');
-const translation = require('./translation.js');
+const puppeteer = require('puppeteer');
 
-// Replace 'YOUR_TELEGRAM_BOT_TOKEN' with your actual bot token
-const botToken = '';
-const bot = new TelegramBot(botToken, { polling: true });
-// States for conversation
-const states = {
-    WELCOME: 0,
-    NAME: 1,
-    CITY: 2,
-    CITY_MULTISELECT: 3,
-    ROOMS: 4,
-    PRICE: 5
-};
 
-bot.on('message', (msg) => {
-  const chatId = msg.chat.id;
-  const messageText = msg.text;
-  console.log(messageText)
-  switch (messageText) {
-    case '/start':
-      const options = {
-        reply_markup: {
-          inline_keyboard: [[{ text: 'ברור!', callback_data: 'yes' }]]
-        },
-      };
-        bot.sendMessage(chatId, translation.welcome, options);
-        break;
-    default:
-      // Process user input based on the current state
-      processUserInput(chatId, messageText);
-      break;
-  }
-});
+(async () => {
+  try {
+    // Launch a headless browser
+    const browser = await puppeteer.launch({headless: false});
+    
+    // Create a new page
+    const page = await browser.newPage();
+    
+    // Navigate to the webpage you want to interact with
+    await page.goto('https://www.facebook.com/groups/458499457501175/'); // Replace 'https://example.com' with the actual URL
+    await page.waitForTimeout(2000);
 
-function getUpdatedInlineKeyboard(selectedOption) {
-    const options = [
-        { text: 'Red', callback_data: 'red' },
-        { text: 'Blue', callback_data: 'blue' },
-        { text: 'Green', callback_data: 'green' },
-        { text: 'Yellow', callback_data: 'yellow' },
-      // Add more options as needed
-    ];
-  
-    // Update the text of the selected option
-    options.forEach((option) => {
-      if (option.callback_data === selectedOption) {
-        option.text = `Selected: ${option.text}`;
-      }
+    // Wait for the page to load completely
+    //await page.waitForNaviation({ waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => {
+      window.scrollBy(0, 500);
     });
-  
-    const inlineKeyboard = {
-          inline_keyboard: [
-            [{ text: 'Red 1', callback_data: 'red' }],
-            [{ text: 'Blue', callback_data: 'blue' }],
-            [{ text: 'Green', callback_data: 'green' }],
-            [{ text: 'Yellow', callback_data: 'yellow' }],
-            ],
-        
-    };
-  
-    return inlineKeyboard;
-  }
-  
+    await page.waitForTimeout(1000);
 
-bot.on('callback_query', (query) => {
-    const chatId = query.message.chat.id;
-    const selectedOption = query.data;
-    const currentState = chatStates[chatId].state;
+    await page.evaluate(() => {
+      window.scrollBy(1000, 1000);
+    });
+    await page.waitForTimeout(1500);
 
-    switch(currentState){
-      case states.WELCOME:
-        if(selectedOption == "yes"){
-          const options = {
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: 'Red', callback_data: 'red' }],
-                [{ text: 'Blue', callback_data: 'blue' }],
-                [{ text: 'Green', callback_data: 'green' }],
-                [{ text: 'Yellow', callback_data: 'yellow' }],
-              ],
-            },
-          };
-        
-        bot.sendMessage(chatId, translation.whichCity, options);
-        chatStates[chatId].state = states.CITY_MULTISELECT;
+    await page.evaluate(() => {
+      window.scrollBy(2000, 2000);
+    });
+    await page.waitForTimeout(2500);
+
+    await page.evaluate(() => {
+      window.scrollBy(3000, 3000);
+    });
+    await page.waitForTimeout(2000);
+
+    // Function to check if the page contains the text "more details" within a div with role="button"
+    async function containsTextInRoleButton(page, text) {
+      const elements = await page.$$('div[role="button"]');
+      for (const element of elements) {
+        const textContent = await page.evaluate(el => el.textContent, element);
+      
+        if (textContent.includes(text)) {
+          try{
+            await element.click();
+          }
+          catch(err){
+            console.log('err', err);
+          }
         }
-        break;
-      case states.CITY_MULTISELECT:
-        const updatedInlineKeyboard = getUpdatedInlineKeyboard(selectedOption);
-        bot.editMessageReplyMarkup(updatedInlineKeyboard, {
-            chat_id: chatId,
-            message_id: query.message.message_id,
-        });
-        break;
+      }
+      return false;
     }
 
-});
+    // If the page contains "more details" within a div with role="button", click on it
+    if (await containsTextInRoleButton(page, 'See more')) {
+      console.log('Clicked on "more details" link within a div with role="button".');
+    } else {
+      console.log('"More details" link not found within a div with role="button".');
+    }
 
-// Function to process user input based on the current state
-const processUserInput = (chatId, messageText) => {
-  const currentState = chatStates[chatId].state;
+    // Wait for a while to see the result of the click
+    await page.waitForTimeout(25000); // Adjust the waiting time as needed
 
-  switch (currentState) {
-    case states.WELCOME:
-        
-        break;
-    case states.CITY:
-      if (['Tel Aviv', 'Ramat Gat', 'Givaataim', 'Petah Tiqwa'].includes(messageText)) {
-        chatStates[chatId].city = messageText;
-        bot.sendMessage(chatId, translation.howMuchRoom);
-        chatStates[chatId].state = states.ROOMS;
-      } else {
-        bot.sendMessage(chatId, "Please choose a city from the provided options.");
+
+
+
+
+
+
+
+
+
+    const divSelector = 'div[role="feed"]'; // Selector for the div with role="feed"
+    await page.waitForTimeout(15000);
+  
+    const nestedElements = await page.evaluate((selector) => {
+      const feedDiv = document.querySelector(selector);
+  
+      if (!feedDiv) {
+        return [];
       }
-      break;
+  
+      const processElement = (element) => {
+        const obj = {
+          text: element.textContent.trim(),
+          children: Array.from(element.children).map(processElement),
+        };
+  
+        return obj;
+      };
+  
+      return processElement(feedDiv);
+    }, divSelector);
+  
+    console.log(nestedElements);
+  
 
-    case states.PRICE:
-      if (!isNaN(messageText)) {
-        chatStates[chatId].price = messageText;
-        bot.sendMessage(chatId, translation.howMuchPrice);
-        chatStates[chatId].state = states.WELCOME;
-      } else {
-        bot.sendMessage(chatId, "Please enter a valid number for the maximum price.");
-      }
-      break;
 
-    case states.ROOMS:
-      if (["1", '2', "2.5", '3', '4', '5'].includes(messageText)) {
-        chatStates[chatId].rooms = messageText;
-       bot.sendMessage(chatId, translation.howMuchRoom);
-       chatStates[chatId].state = states.PRICE;
-      } else {
-        bot.sendMessage(chatId, "Please choose the number of rooms from the provided options.");
-      }
-      break;
+
+
+
+
+
+
+
+    // Close the browser
+    await browser.close();
+  } catch (error) {
+    console.error('Error:', error);
   }
-};
+})();
 
-// Object to store chat states
-const chatStates = {};
 
-// Start the bot
-bot.onText(/\/start/, (msg) => {
-  const chatId = msg.chat.id;
-  chatStates[chatId] = { state: states.WELCOME };
-});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// async function scrapeNestedElements() {
+//   const browser = await puppeteer.launch({headless: false});
+//   const page = await browser.newPage();
+
+//   await page.goto('https://he-il.facebook.com/groups/295395253832427'); // Replace with the URL of the page containing the div you want to extract text from.
+
+//   const divSelector = 'div[role="feed"]'; // Selector for the div with role="feed"
+//   await page.waitForTimeout(15000);
+
+//   const nestedElements = await page.evaluate((selector) => {
+//     const feedDiv = document.querySelector(selector);
+
+//     if (!feedDiv) {
+//       return [];
+//     }
+
+//     const processElement = (element) => {
+//       const obj = {
+//         text: element.textContent.trim(),
+//         children: Array.from(element.children).map(processElement),
+//       };
+
+//       return obj;
+//     };
+
+//     return processElement(feedDiv);
+//   }, divSelector);
+
+//   console.log(nestedElements);
+
+//   await browser.close();
+// }
+
+// scrapeNestedElements();
