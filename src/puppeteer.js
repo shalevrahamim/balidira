@@ -63,30 +63,42 @@ async function containsTextInRoleButton(page, text) {
 
     const divSelector = 'div[role="feed"]'; // Selector for the div with role="feed"
     await page.waitForTimeout(2000);
+
+    const posts = await page.evaluate(() => {
+      const postElements = Array.from(document.querySelectorAll('div[role="feed"] > div'));
   
-    const nestedElements = await page.evaluate((selector) => {
-      const feedDiv = document.querySelector(selector);
+      const postsArray = postElements.map(postElement => {
+        const post = {};
   
-      if (!feedDiv) {
-        return [];
-      }
+        // Extract text from the post
+        post.text = postElement.textContent.trim();
   
-      const processElement = (element) => {
-        const obj = {
-          text: element.textContent.trim(),
-          children: Array.from(element.children).map(processElement),
-        };
+        // Extract URL from the post (contains 'posts' in href)
+        const linkElement = postElement.querySelector('a[href*="posts"]');
+        if (linkElement) {
+          post.url = linkElement.getAttribute('href');
+        }
   
-        return obj;
-      };
+        // Extract image URLs from the post
+        const imageElements = postElement.querySelectorAll('img');
+        post.images = Array.from(imageElements).map(imageElement => imageElement.getAttribute('src'));
   
-      return processElement(feedDiv);
-    }, divSelector);
+        return post;
+      });
   
-    console.log(nestedElements.children.map(child => child.text));
+      return postsArray;
+    });
+    console.log(posts)
+    savePosts(posts);
+    console.log('posts:', posts.length)
+    console.log('filered posts:', posts.filter(post => post.text != '' && post.images.length > 0).length)
+    // console.log(nestedElements.children.map(child => child.text));
     // Close the browser
     await browser.close();
   } catch (error) {
     console.error('Error:', error);
   }
 })();
+
+const savePosts = async (posts) => {
+}

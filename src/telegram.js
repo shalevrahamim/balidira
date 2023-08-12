@@ -23,7 +23,7 @@ const priceRentOptions = [
 ];
 
 // Replace 'YOUR_TELEGRAM_BOT_TOKEN' with your actual bot token
-const botToken = '6643199401:AAEduMJPbLPB96ahx6j_4NynZJQ3bgOSNvQ';
+const botToken = process.env.TELEGTAM_TOKEN;
 const bot = new TelegramBot(botToken, { polling: true });
 // States for conversation
 const states = {
@@ -58,11 +58,11 @@ bot.on('message', (msg) => {
   }
 });
 
-function getUpdatedInlineKeyboard(options, type, selectedOption, chatId) {
+async function getUpdatedInlineKeyboard(options, type, selectedOption, chatId) {
   const cloneOptions = JSON.parse(JSON.stringify(options));  
   cloneOptions.forEach((rowOptions) => {
-      rowOptions.forEach((option) => {
-        const userPreferences = chatStates[chatId].preferences;
+      rowOptions.forEach(async (option) => {
+        const userPreferences = await getUser(chatId);
         const isMarked = !!userPreferences?.[type]?.[option.callback_data];
         if (option.callback_data === selectedOption) {
           option.text = isMarked ? option.text :`✅ ${option.text}`;
@@ -173,17 +173,21 @@ const processUserInput = (chatId, messageText) => {
   }
 };
 
-const arrayToObj = (arr, key) => {
-  return arr.reduce((acc, curr) => {
-    acc[curr[key]] = curr;
-    return acc;
-  }, {});
+let chatStates = {};
+
+const getUser = async (chatId) => {
+  if(chatsStates[chatId]){
+    return chatStates[chatId];
+  }
+  else{
+    const user = await DB.getUser(chatId);
+    chatStates[chatId] = user;
+    return user;
+  }
 }
 
-let chatStates = {};
-DB.getAllUsers().then((users) => {
-  chatStates = arrayToObj(users, 'chat_id')
-  console.log(chatStates);
+DB.getUser(chat_id).then((user) => {
+  console.log(user);
 });
 
 // Start the bot

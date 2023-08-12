@@ -8,9 +8,9 @@ console.log('script started');
 const sequelize = new Sequelize({
   dialect: 'postgres',
   username: 'postgres',
-  password: 'q-8-)r{vp9xNN;h+',
+  password: process.env.DB_PASSWORD,
   database: 'postgres',
-  host: '34.31.109.100',
+  host: process.env.DB_HOST,
   logging: true,
 });
 
