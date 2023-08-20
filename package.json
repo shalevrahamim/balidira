@@ -20,6 +20,7 @@
     "dotenv": "^16.3.1",
     "express": "^4.17.1",
     "node-telegram-bot-api": "^0.61.0",
+    "openai": "^4.0.1",
     "pg": "^8.11.2",
     "puppeteer": "^20.9.0",
     "sequelize": "^6.32.1",

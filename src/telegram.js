@@ -1,6 +1,9 @@
 const TelegramBot = require('node-telegram-bot-api');
 const translation = require('./translation.js');
 const DB = require('./db.js');
+require('dotenv').config()
+
+let chatStates = {};
 
 const citiesOptions = [
   [{ text: 'תל אביב', callback_data: 'tlv' }, { text: 'פתח תקווה', callback_data: 'ptct' }],
@@ -24,6 +27,7 @@ const priceRentOptions = [
 
 // Replace 'YOUR_TELEGRAM_BOT_TOKEN' with your actual bot token
 const botToken = process.env.TELEGTAM_TOKEN;
+console.log('botToken', botToken)
 const bot = new TelegramBot(botToken, { polling: true });
 // States for conversation
 const states = {
@@ -38,8 +42,11 @@ const states = {
     DONE: 8,
 };
 
-bot.on('message', (msg) => {
+bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
+  const user = await getUser(chatId);
+  if(!user)
+    return;
   const messageText = msg.text;
   switch (messageText) {
     case '/start':
@@ -60,9 +67,10 @@ bot.on('message', (msg) => {
 
 async function getUpdatedInlineKeyboard(options, type, selectedOption, chatId) {
   const cloneOptions = JSON.parse(JSON.stringify(options));  
-  cloneOptions.forEach((rowOptions) => {
-      rowOptions.forEach(async (option) => {
-        const userPreferences = await getUser(chatId);
+  for(const rowOptions of cloneOptions) {
+    for(const option of rowOptions) {
+        const user = await getUser(chatId);
+        const userPreferences = user.preferences;
         const isMarked = !!userPreferences?.[type]?.[option.callback_data];
         if (option.callback_data === selectedOption) {
           option.text = isMarked ? option.text :`✅ ${option.text}`;
@@ -71,20 +79,23 @@ async function getUpdatedInlineKeyboard(options, type, selectedOption, chatId) {
             [selectedOption]: !isMarked
           }
         }
-        else{
+        else {
           option.text = isMarked ? `✅ ${option.text}`: option.text;
         }
-      });
-    });
+      };
+    };
   
     return {inline_keyboard: cloneOptions};
   }
   
 
-bot.on('callback_query', (query) => {
+bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
+    const user = await getUser(chatId);
+    if(!user)
+      return;
     const selectedOption = query.data;
-    const userPreferences = chatStates[chatId].preferences;
+    const userPreferences = user.preferences;
     const currentState = userPreferences.state;
     switch(currentState){
       case states.WELCOME:
@@ -147,17 +158,20 @@ bot.on('callback_query', (query) => {
 });
 
 const moveToState = async (chatId, state, cleanPreferences) => {
-  const userPreferences = cleanPreferences ? {} : chatStates[chatId]?.preferences || {};
+  const user = await getUser(chatId);
+  const userPreferences = cleanPreferences ? {} : user?.preferences || {};
   userPreferences.state = state;
-  const user = await DB.createOrUpdateUser({chatId, preferences: userPreferences})
-  chatStates[chatId] = user;
+  const updatedUser = await DB.createOrUpdateUser({chatId, preferences: userPreferences})
+  chatStates[chatId] = updatedUser;
   console.log(chatStates);
 
 }
 
 // Function to process user input based on the current state
-const processUserInput = (chatId, messageText) => {
-  const userPreferences = chatStates[chatId].preferences;
+const processUserInput = async (chatId, messageText) => {
+  const user = await getUser(chatId);
+  console.log('user', user, 'chat', chatId)
+  const userPreferences = user.preferences;
   const currentState = userPreferences.state;
   switch (currentState) {
     case states.NAME:
@@ -173,25 +187,68 @@ const processUserInput = (chatId, messageText) => {
   }
 };
 
-let chatStates = {};
 
 const getUser = async (chatId) => {
-  if(chatsStates[chatId]){
+  console.log('chattt', chatId);
+  if(chatStates[chatId]){
+    console.log('aaa',chatStates[chatId])
     return chatStates[chatId];
   }
   else{
     const user = await DB.getUser(chatId);
+    console.log('aaa',user)
     chatStates[chatId] = user;
     return user;
   }
 }
 
-DB.getUser(chat_id).then((user) => {
-  console.log(user);
-});
+const sendArrayImages = async (chatId, imageUrls) => {
+  const media = imageUrls.map((imageUrl) => ({ type: 'photo', media: imageUrl }));
+  
+  await bot.sendMediaGroup(chatId, media)
+    .catch((error) => {
+      console.error('Error sending images:', error);
+    });
+}
 
-// Start the bot
-// bot.onText(/\/start/, (msg) => {
-//   const chatId = msg.chat.id;
-//   moveToState(chatId, states.WELCOME)
-// });
+const matchMaking = async () => {
+
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const sendMessage = async (chatId, listing2) => {
+  const listing = await DB.getUnNotifiedListings();
+  for(const list of listing) {
+    if(!list.price)
+      continue;
+      const imageUrls = list.imagesUrls.filter(url => url.includes('scontent'));
+      const content = list.originalContent;
+      const price = list.price;
+      const squareSize = list.squareSize;
+      const rooms = list.rooms;
+      const location = list.location;
+      const proximity = list.proximity;
+      const floor = list.floor;
+      const isBroker = list.isBroker;
+      const contact = list.contact;
+      const entryDate = list.entryDate;
+      const moreDetails = list.moreDetails;
+      const postUrl = list.postUrl;
+try{
+  await bot.sendMessage(chatId, `⬇️ מצאתי לך דירה חדשה! 🎉🎉 ⬇️`);
+  await sendArrayImages(chatId, imageUrls);
+  await bot.sendMessage(chatId, `${isBroker ? '<b>🚨 מתיווך 🚨</b>\n\n' : ""}${location ? `מיקום: <b>${location}</b>\n` : ""}${rooms ? `מספר חדרים: <b>${rooms}</b>\n` : ""}${squareSize ? `מר רבוע: <b>${squareSize}</b>\n`: ""}${floor ? `קומה: <b>${floor}</b>\n` : ""}${proximity ? `בקרבת: <b>${proximity}</b>\n`: ""}${entryDate ? `תאריך כניסה: <b>${entryDate}</b>\n` : ""}\n${price ? `מחיר: <b>${price} 🤑</b>\n` : ""}${contact ? `יצירת קשר: <b>${contact} ☎️</b>\n` : ""}\n\n${moreDetails ? `פרטים נוספים: <b>${moreDetails}</b>\n`: ""}${postUrl}`
+  , {parse_mode: 'HTML'});
+  await delay(2000);
+}
+catch(e){
+  console.log(price, squareSize, location, postUrl)
+return;
+}
+  }
+}
+
+sendMessage(334337635, []);

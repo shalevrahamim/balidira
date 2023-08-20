@@ -1,4 +1,6 @@
 const Sequelize = require('sequelize');
+require('dotenv').config()
+
 const { DataTypes, Op } = Sequelize;
 
 const { Promise } = require('bluebird');
@@ -29,31 +31,69 @@ const User = sequelize.define('user', {
 
 const Listing = sequelize.define('listing', {
   id: {
-    type: DataTypes.STRING,
-    primaryKey: true,
+    type: Sequelize.UUID,
+    defaultValue: Sequelize.UUIDV4,
+    allowNull: false,
+    primaryKey: true
   },
   price: {
     type: DataTypes.INTEGER,
+    allowNull: true,
   },
   squareSize: {
-    type: DataTypes.INTEGER
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  rooms: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
   },
   location: {
     type: DataTypes.STRING,
+    allowNull: true,
   },
   proximity: {
-    type: DataTypes.JSONB
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  floor: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  isBroker: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  contact: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  entryDate: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  moreDetails: {
+    type: DataTypes.TEXT,
+    allowNull: true,
   },
   postUrl: {
-    type: DataTypes.STRING
+    type: DataTypes.TEXT
   },
   originalContent: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT,
+  },
+  imagesUrls: {
+    type: Sequelize.ARRAY(Sequelize.TEXT),
+    defaultValue: [],
   },
   isNotified: {
-    type: DataTypes.STRING,
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
-})
+});
+
+Listing.sync();
+
 
 module.exports.createOrUpdateUser = async ({ chatId, preferences }) => {
   let user;
@@ -127,7 +167,7 @@ module.exports.getUser = async (chatId) => {
   try {
     user = await User.findOne({ 
       where: {
-        chat_id: chatId,
+        chat_id: String(chatId),
       },
     });
   } catch (error) {
@@ -172,3 +212,5 @@ module.exports.isCriteriaMatchListing = async (chatId, listing) => {
 
   return isCriteriaMatch;
 };
+
+console.log('synccc')

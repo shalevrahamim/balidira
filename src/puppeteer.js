@@ -1,4 +1,6 @@
 const puppeteer = require('puppeteer');
+const {useGPT} = require("./chatgpt");
+const DB = require('./db.js');
 
 // Function to check if the page contains the text "more details" within a div with role="button"
 async function containsTextInRoleButton(page, text) {
@@ -17,7 +19,7 @@ async function containsTextInRoleButton(page, text) {
   return false;
 }
 
-(async () => {
+const scrapy = async () => {
   try {
     // Launch a headless browser
     const browser = await puppeteer.launch({headless: false});
@@ -27,29 +29,28 @@ async function containsTextInRoleButton(page, text) {
     
     // Navigate to the webpage you want to interact with
     await page.goto('https://www.facebook.com/groups/458499457501175/');
-    await page.waitForTimeout(2000);
 
     // Wait for the page to load completely
     // await page.waitForNaviation({ waitUntil: 'domcontentloaded' });
     await page.evaluate(() => {
       window.scrollBy(0, 500);
     });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
 
     await page.evaluate(() => {
       window.scrollBy(1000, 1000);
     });
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(500);
 
     await page.evaluate(() => {
       window.scrollBy(2000, 2000);
     });
-    await page.waitForTimeout(2500);
+    await page.waitForTimeout(500);
 
     await page.evaluate(() => {
       window.scrollBy(3000, 3000);
     });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2500);
 
     // If the page contains "more details" within a div with role="button", click on it
     if (await containsTextInRoleButton(page, 'See more')) {
@@ -59,10 +60,9 @@ async function containsTextInRoleButton(page, text) {
     }
 
     // Wait for a while to see the result of the click
-    await page.waitForTimeout(3000); // Adjust the waiting time as needed
+    await page.waitForTimeout(500); // Adjust the waiting time as needed
 
     const divSelector = 'div[role="feed"]'; // Selector for the div with role="feed"
-    await page.waitForTimeout(2000);
 
     const posts = await page.evaluate(() => {
       const postElements = Array.from(document.querySelectorAll('div[role="feed"] > div'));
@@ -88,17 +88,51 @@ async function containsTextInRoleButton(page, text) {
   
       return postsArray;
     });
-    console.log(posts)
-    savePosts(posts);
-    console.log('posts:', posts.length)
-    console.log('filered posts:', posts.filter(post => post.text != '' && post.images.length > 0).length)
+    await browser.close();
+    return posts.filter(post => post.text != '' && post.images.length > 0)
+    // useGPT(filtered[0].text).then((res) => console.log('returned', res));
+    // console.log('filtered:', filtered[0].text)
     // console.log(nestedElements.children.map(child => child.text));
     // Close the browser
-    await browser.close();
   } catch (error) {
     console.error('Error:', error);
   }
-})();
-
-const savePosts = async (posts) => {
 }
+
+function removeQueryParameters(url) {
+  const indexOfQuestionMark = url.indexOf('?');
+  if (indexOfQuestionMark !== -1) {
+    return url.substring(0, indexOfQuestionMark);
+  }
+  return url;
+}
+
+const getPosts = async () => {
+  const posts = await scrapy();
+  const createArray = [];
+  for(const post of posts){
+    try{
+      const object = await useGPT(post.text);
+      createArray.push({
+        price: object.price,
+        squareSize: object.squareMeter,
+        rooms: object.roomsNumber,
+        location: object.location,
+        proximity: object.proximity,
+        floor: object.floor,
+        isBroker: object.isBroker,
+        contact: object.contact,
+        entryDate: object.entryDate,
+        moreDetails: object.moreDetails,
+        originalContent: post.text,
+        imagesUrls: post.images, 
+        postUrl: removeQueryParameters(post.url)
+      })
+    }
+    catch(err){}
+  }
+  DB.createListings(createArray)
+  console.log('posts', posts, posts.length);
+}
+
+getPosts();
