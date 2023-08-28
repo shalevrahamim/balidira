@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const {useGPT} = require("./chatgpt");
+const crypto = require('crypto');
 const DB = require('./db.js');
 
 // Function to check if the page contains the text "more details" within a div with role="button"
@@ -107,14 +108,26 @@ function removeQueryParameters(url) {
   return url;
 }
 
+function hashString(content) {
+  const hash = crypto.createHash('sha256');
+  hash.update(content);
+  return hash.digest('hex');
+}
+
 const getPosts = async () => {
   const posts = await scrapy();
   const createArray = [];
   for(const post of posts){
     try{
+      const hashedText = hashString(post.text)
+      const existingListing = await DB.isListingExist(hashedText)
+      if(existingListing)
+        continue;
       const object = await useGPT(post.text);
       createArray.push({
         price: object.price,
+        city: 'tlv',
+        provider: 'facebook',
         squareSize: object.squareMeter,
         rooms: object.roomsNumber,
         location: object.location,
@@ -125,6 +138,7 @@ const getPosts = async () => {
         entryDate: object.entryDate,
         moreDetails: object.moreDetails,
         originalContent: post.text,
+        originalContentHash: hashedText,
         imagesUrls: post.images, 
         postUrl: removeQueryParameters(post.url)
       })

@@ -24,7 +24,7 @@ const useGPT = async (content) => {
   
   const conversation = [
     { role: 'system', content: 'You are a data extractor that convert text to json.' },
-    { role: 'user', content: `I will give you aparment listing content and you will extract the following properties.\nrules: remove double quetes from text. returned value should be valid json.\nreturned object structure: {price:number, squareMeter:number, roomsNumber:number, location:text, proximity:text, floor:text, isBroker:boolean, contact:text, entryDate:text, moreDetails:text}.\ndefault values: {price:null, squareMeter:null, roomsNumber:null, location:null, floor:null/(קרקע = 0), proximity:null, isBroker:false, contact:null, entryDate:null, moreDetails:null}.\n this is the listing: ${contentExample}` },
+    { role: 'user', content: `I will give you aparment listing content and you will extract the following properties.\nrules: remove double quetes from text. returned value should be valid json.\nreturned object structure: {price:integer, squareMeter:integer, roomsNumber:double, location:string, proximity:string, floor:string, isBroker:boolean, contact:string, entryDate:string, moreDetails:string}.\ndefault values: {price:null, squareMeter:null, roomsNumber:null, location:null, floor:null/(קרקע = 0), proximity:null, isBroker:false, contact:null, entryDate:null, moreDetails:null}.\n this is the listing: ${contentExample}` },
     { role: 'assistant', content: '{"price": 6300, "squareMeter": 60, "roomsNumber": 2.5, "location": "דב הז (פינת גורדון,בין דיזינגוף לבן יהודה)", "proximity": "קרוב לחוף הים ולכיכר דיזינגוף", "floor": 0, "isBroker": false, "contact": "0548161226 מרום", "entryDate": "19/09", "moreDetails": "*תנתן עדיפות* למי שיקנה את הריהוט של הבית/חלקו. מראה הסופש ובראשון"}' },
     { role: 'user', content: `${content}` }
   ];
@@ -32,7 +32,7 @@ const useGPT = async (content) => {
   const response = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo', // Use the "model" parameter instead of "engine"
     messages: conversation,
-    max_tokens: 1000
+    max_tokens: 2500
   });
 
 

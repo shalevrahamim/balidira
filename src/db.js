@@ -24,9 +24,7 @@ const User = sequelize.define('user', {
   },
   preferences: {
     type: DataTypes.JSONB
-  },
-  createdAt: 'createdat',
-  updatedAt: 'updatedat'
+  }
 });
 
 const Listing = sequelize.define('listing', {
@@ -35,6 +33,12 @@ const Listing = sequelize.define('listing', {
     defaultValue: Sequelize.UUIDV4,
     allowNull: false,
     primaryKey: true
+  },
+  city: {
+    type: DataTypes.STRING,  
+  },
+  provider: {
+    type: DataTypes.STRING,  
   },
   price: {
     type: DataTypes.INTEGER,
@@ -45,7 +49,7 @@ const Listing = sequelize.define('listing', {
     allowNull: true,
   },
   rooms: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.DOUBLE,
     allowNull: true,
   },
   location: {
@@ -82,6 +86,9 @@ const Listing = sequelize.define('listing', {
   originalContent: {
     type: DataTypes.TEXT,
   },
+  originalContentHash: {
+    type: DataTypes.STRING,
+  },
   imagesUrls: {
     type: Sequelize.ARRAY(Sequelize.TEXT),
     defaultValue: [],
@@ -90,10 +97,14 @@ const Listing = sequelize.define('listing', {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+},{
+  indexes: [
+    {
+      unique: true, // You can specify whether the index should be unique or not
+      fields: ['originalContentHash'],
+    }
+  ]
 });
-
-Listing.sync();
-
 
 module.exports.createOrUpdateUser = async ({ chatId, preferences }) => {
   let user;
@@ -162,6 +173,47 @@ module.exports.getUnNotifiedListings = async() => {
   return listings;
 }
 
+module.exports.isListingExist = async(hashedText) => {
+  let listings;
+  try {
+    listings = await Listing.findOne({
+      where: {
+        originalContentHash: hashedText,
+      },
+    });
+  } catch (error) {
+    console.log('failed to find unnotified listings', error)
+  }
+
+  return listings;
+}
+
+
+module.exports.getMatchingUsersForListing = async (listing) => {
+  try {
+    const floorPrice = Math.floor(listing.price/1000)*1000;
+    const topPrice = floorPrice >= 6000 ? floorPrice + 1500 : floorPrice + 1000;
+    const cityFiltered = `preferences.cities.${listing.city}`;
+    const roomsFiltered = listing.rooms > 5 ? "preferences.rooms.5plus" : `preferences.rooms.${listing.rooms*10}rooms`;
+    const priceFiltered = floorPrice >= 10500 ? 'preferences.prices.10500plus' : `preferences.prices.${floorPrice}-${topPrice}`;
+    const whereClause =  {
+      [cityFiltered]: true
+    };
+    if(listing.rooms)
+      whereClause[roomsFiltered] = true;
+    if(listing.price)
+      whereClause[priceFiltered] = true;
+    console.log('whereClause',whereClause)
+    const matchingUsers = await User.findAll({where: whereClause});
+    console.log('***filter', cityFiltered, roomsFiltered, priceFiltered)
+    console.log('***users', matchingUsers.map(user => user.toJSON()));
+    return matchingUsers.map(user => user.toJSON());
+  } catch (error) {
+    console.error('Error while fetching matching users:', error);
+    throw error;
+  }
+}
+
 module.exports.getUser = async (chatId) => {
   let user;
   try {
@@ -170,11 +222,20 @@ module.exports.getUser = async (chatId) => {
         chat_id: String(chatId),
       },
     });
+    if(!user){
+      const newUser = {
+        chat_id: chatId,
+        preferences: {}
+      };
+
+      user = await User.create(newUser);
+      console.log('New user created:', user.toJSON());
+    }
   } catch (error) {
     console.error('failed to find user with chatId', { chatId, error});
   }
 
-  return user;
+  return user.toJSON();
 };
 
 const creteriaClause = async (preferences) => {

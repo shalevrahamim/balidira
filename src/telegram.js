@@ -12,16 +12,16 @@ const citiesOptions = [
 ];
 
 const roomsOptions = [
-  [{ text: '1', callback_data: '1' }, { text: '2', callback_data: '2' }, { text: '2.5', callback_data: '2.5' }],
-  [{ text: '3', callback_data: '3' }, { text: '3.5', callback_data: '3.5' }, { text: '4', callback_data: '4' }],
-  [{ text: '4.5', callback_data: '4.5' }, { text: '5', callback_data: '5' }, { text: '5+', callback_data: '5plus' }],
+  [{ text: '1', callback_data: '10rooms' }, { text: '2', callback_data: '20rooms' }, { text: '2.5', callback_data: '25rooms' }],
+  [{ text: '3', callback_data: '30rooms' }, { text: '3.5', callback_data: '35rooms' }, { text: '4', callback_data: '40rooms' }],
+  [{ text: '4.5', callback_data: '45rooms' }, { text: '5', callback_data: '50rooms' }, { text: '5+', callback_data: '50plus' }],
   [{ text: 'אישור', callback_data: 'confirm' }],
 ];
 
 const priceRentOptions = [
   [{ text: '1000-2000', callback_data: '1000-2000' }, { text: '2000-3000', callback_data: '2000-3000' }, { text: '3000-4000', callback_data: '3000-4000' }],
   [{ text: '4000-5000', callback_data: '4000-5000' }, { text: '5000-6000', callback_data: '5000-6000' }, { text: '6000-7500', callback_data: '6000-7500' }],
-  [{ text: '7500-9000', callback_data: '7500-9000' }, { text: '9000-10000', callback_data: '9000-10000' }, { text: '10000+', callback_data: '10000plus' }],
+  [{ text: '7500-9000', callback_data: '7500-9000' }, { text: '9000-10500', callback_data: '9000-10500' }, { text: '10500+', callback_data: '10500plus' }],
   [{ text: 'אישור', callback_data: 'confirm' }],
 ];
 
@@ -31,25 +31,27 @@ console.log('botToken', botToken)
 const bot = new TelegramBot(botToken, { polling: true });
 // States for conversation
 const states = {
-    WELCOME: 0,
-    NAME: 1,
-    CITY: 2,
-    CITY_MULTISELECT: 3,
-    ROOMS: 4,
-    ROOMS_MULTISELECT: 5,
-    PRICE: 6,
-    PRICE_MULTISELECT: 7,
-    DONE: 8,
+    WELCOME: "welcome",
+    NAME: "name",
+    CITY: "city",
+    CITY_MULTISELECT: "city_multiselect",
+    ROOMS: "rooms",
+    ROOMS_MULTISELECT: "rooms_multiselect",
+    PRICE: "price",
+    PRICE_MULTISELECT: "price_multiselect",
+    DONE: "done",
 };
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
+  console.log('msgg', msg.text)
   const user = await getUser(chatId);
   if(!user)
     return;
   const messageText = msg.text;
   switch (messageText) {
     case '/start':
+      
         const options = {
           reply_markup: {
             inline_keyboard: [[{ text: 'ברור!', callback_data: 'yes' }]]
@@ -65,11 +67,10 @@ bot.on('message', async (msg) => {
   }
 });
 
-async function getUpdatedInlineKeyboard(options, type, selectedOption, chatId) {
+function getUpdatedInlineKeyboard(user, options, type, selectedOption) {
   const cloneOptions = JSON.parse(JSON.stringify(options));  
   for(const rowOptions of cloneOptions) {
     for(const option of rowOptions) {
-        const user = await getUser(chatId);
         const userPreferences = user.preferences;
         const isMarked = !!userPreferences?.[type]?.[option.callback_data];
         if (option.callback_data === selectedOption) {
@@ -90,29 +91,32 @@ async function getUpdatedInlineKeyboard(options, type, selectedOption, chatId) {
   
 
 bot.on('callback_query', async (query) => {
-    const chatId = query.message.chat.id;
-    const user = await getUser(chatId);
-    if(!user)
-      return;
-    const selectedOption = query.data;
-    const userPreferences = user.preferences;
-    const currentState = userPreferences.state;
-    switch(currentState){
-      case states.WELCOME:
-        if(selectedOption == "yes") {
-          bot.sendMessage(chatId, translation.whatIsYourName);
-          moveToState(chatId, states.NAME);
-        }
-        break;
+  const chatId = query.message.chat.id;
+  const user = await getUser(chatId);
+  if(!user)
+  return;
+  const selectedOption = query.data;
+  const userPreferences = user.preferences;
+  const currentState = userPreferences.state;
+  switch(currentState){
+    case states.WELCOME:
+      if(selectedOption == "yes") {
+        bot.sendMessage(chatId, translation.whatIsYourName);
+        moveToState(chatId, states.NAME);
+      }
+      break;
       case states.CITY_MULTISELECT:
         if(selectedOption != "confirm"){
-          const updatedInlineKeyboard = getUpdatedInlineKeyboard(citiesOptions, 'cities', selectedOption, chatId);
+          const updatedInlineKeyboard = getUpdatedInlineKeyboard(user, citiesOptions, 'cities', selectedOption);
+          console.log('loook', currentState, selectedOption, updatedInlineKeyboard)
           bot.editMessageReplyMarkup(updatedInlineKeyboard, {
-              chat_id: chatId,
-              message_id: query.message.message_id,
+            chat_id: chatId,
+            message_id: query.message.message_id,
           });
         }
         else{
+
+          console.log('optionss')
           const options = {
             reply_markup: {
               inline_keyboard: roomsOptions
@@ -124,7 +128,7 @@ bot.on('callback_query', async (query) => {
         break;
         case states.ROOMS_MULTISELECT:
           if(selectedOption != "confirm"){
-            const updatedInlineKeyboard = getUpdatedInlineKeyboard(roomsOptions, 'rooms', selectedOption, chatId);
+            const updatedInlineKeyboard = getUpdatedInlineKeyboard(user, roomsOptions, 'rooms', selectedOption);
             bot.editMessageReplyMarkup(updatedInlineKeyboard, {
                 chat_id: chatId,
                 message_id: query.message.message_id,
@@ -142,7 +146,7 @@ bot.on('callback_query', async (query) => {
           break;
         case states.PRICE_MULTISELECT:
           if(selectedOption != "confirm"){
-            const updatedInlineKeyboard = getUpdatedInlineKeyboard(priceRentOptions, 'prices', selectedOption, chatId);
+            const updatedInlineKeyboard = getUpdatedInlineKeyboard(user, priceRentOptions, 'prices', selectedOption);
             bot.editMessageReplyMarkup(updatedInlineKeyboard, {
                 chat_id: chatId,
                 message_id: query.message.message_id,
@@ -163,14 +167,11 @@ const moveToState = async (chatId, state, cleanPreferences) => {
   userPreferences.state = state;
   const updatedUser = await DB.createOrUpdateUser({chatId, preferences: userPreferences})
   chatStates[chatId] = updatedUser;
-  console.log(chatStates);
-
 }
 
 // Function to process user input based on the current state
 const processUserInput = async (chatId, messageText) => {
   const user = await getUser(chatId);
-  console.log('user', user, 'chat', chatId)
   const userPreferences = user.preferences;
   const currentState = userPreferences.state;
   switch (currentState) {
@@ -189,14 +190,11 @@ const processUserInput = async (chatId, messageText) => {
 
 
 const getUser = async (chatId) => {
-  console.log('chattt', chatId);
   if(chatStates[chatId]){
-    console.log('aaa',chatStates[chatId])
     return chatStates[chatId];
   }
   else{
     const user = await DB.getUser(chatId);
-    console.log('aaa',user)
     chatStates[chatId] = user;
     return user;
   }
@@ -219,11 +217,9 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-const sendMessage = async (chatId, listing2) => {
-  const listing = await DB.getUnNotifiedListings();
-  for(const list of listing) {
-    if(!list.price)
-      continue;
+const sendMessage = async (chatId, list) => {
+  if(!list.price)
+    return;
       const imageUrls = list.imagesUrls.filter(url => url.includes('scontent'));
       const content = list.originalContent;
       const price = list.price;
@@ -248,7 +244,6 @@ catch(e){
   console.log(price, squareSize, location, postUrl)
 return;
 }
-  }
 }
 
-sendMessage(334337635, []);
+module.exports.sendMessage = sendMessage;
