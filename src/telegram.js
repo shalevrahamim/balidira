@@ -20,8 +20,9 @@ const roomsOptions = [
 
 const priceRentOptions = [
   [{ text: '1000-2000', callback_data: '1000-2000' }, { text: '2000-3000', callback_data: '2000-3000' }, { text: '3000-4000', callback_data: '3000-4000' }],
-  [{ text: '4000-5000', callback_data: '4000-5000' }, { text: '5000-6000', callback_data: '5000-6000' }, { text: '6000-7500', callback_data: '6000-7500' }],
-  [{ text: '7500-9000', callback_data: '7500-9000' }, { text: '9000-10500', callback_data: '9000-10500' }, { text: '10500+', callback_data: '10500plus' }],
+  [{ text: '4000-5000', callback_data: '4000-5000' }, { text: '5000-6000', callback_data: '5000-6000' }, { text: '6000-7000', callback_data: '6000-7000' }],
+  [{ text: '7000-8000', callback_data: '7000-8000' }, { text: '8000-9000', callback_data: '8000-9000' }, { text: '9000-10000', callback_data: '9000-10000' }],
+  [{ text: '10000-11000', callback_data: '10000-11000' }, { text: '11000-12000', callback_data: '11000-12000' }, { text: '12000+', callback_data: '12000plus' }],
   [{ text: 'אישור', callback_data: 'confirm' }],
 ];
 
@@ -44,14 +45,12 @@ const states = {
 
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
-  console.log('msgg', msg.text)
   const user = await getUser(chatId);
   if(!user)
     return;
   const messageText = msg.text;
   switch (messageText) {
     case '/start':
-      
         const options = {
           reply_markup: {
             inline_keyboard: [[{ text: 'ברור!', callback_data: 'yes' }]]

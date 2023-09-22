@@ -1,7 +1,27 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer'); 
 const {useGPT} = require("./chatgpt");
 const crypto = require('crypto');
 const DB = require('./db.js');
+
+const groups = [
+  {city: 'tlv', url: 'https://www.facebook.com/groups/458499457501175/'},
+  {city: 'tlv', url: 'https://www.facebook.com/groups/2092819334342645/'},
+  {city: 'tlv', url: 'https://www.facebook.com/groups/ApartmentsTelAviv/'},
+  {city: 'tlv', url: 'https://www.facebook.com/groups/RentinTLV/'},
+  {city: 'tlv', url: 'https://www.facebook.com/groups/295395253832427/'},
+  {city: 'tlv', url: 'https://www.facebook.com/groups/telavivrentals/'},
+  {city: 'tlv', url: 'https://www.facebook.com/groups/1196843027043598/'},
+  {city: 'rmg', url: 'https://www.facebook.com/groups/253957624766723/'},
+  {city: 'rmg', url: 'https://www.facebook.com/groups/2642488706002536/'},
+  {city: 'rmg', url: 'https://www.facebook.com/groups/186810449287215/'},
+  {city: 'ptct', url: 'https://www.facebook.com/groups/248835652321875/'},
+  {city: 'ptct', url: 'https://www.facebook.com/groups/isaacnadlan.petahtikva/'},
+  {city: 'gvtm', url: 'https://www.facebook.com/groups/520940308003364/'},
+  {city: 'gvtm', url: 'https://www.facebook.com/groups/564985183576779/'},
+  {city: 'gvtm', url: 'https://www.facebook.com/groups/1424244737803677/'},
+  {city: 'gvtm', url: 'https://www.facebook.com/groups/1068642559922565/'},
+  {city: 'gvtm', url: 'https://www.facebook.com/groups/441654752934426/'},
+]
 
 // Function to check if the page contains the text "more details" within a div with role="button"
 async function containsTextInRoleButton(page, text) {
@@ -20,7 +40,22 @@ async function containsTextInRoleButton(page, text) {
   return false;
 }
 
-const scrapy = async () => {
+async function clickCloseButton(page) {
+  try {
+    const closeButton = await page.$('div[aria-label="Close"]');
+    if (closeButton) {
+      await closeButton.click();
+      console.log('Clicked the Close button');
+    } else {
+      console.log('Close button not found');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+
+const scrapy = async (url) => {
   try {
     // Launch a headless browser
     const browser = await puppeteer.launch({headless: false});
@@ -29,8 +64,9 @@ const scrapy = async () => {
     const page = await browser.newPage();
     
     // Navigate to the webpage you want to interact with
-    await page.goto('https://www.facebook.com/groups/458499457501175/');
-
+    await page.goto(url);
+    await page.waitForTimeout(500);
+    await clickCloseButton(page);
     // Wait for the page to load completely
     // await page.waitForNaviation({ waitUntil: 'domcontentloaded' });
     await page.evaluate(() => {
@@ -114,39 +150,59 @@ function hashString(content) {
   return hash.digest('hex');
 }
 
-const getPosts = async () => {
-  const posts = await scrapy();
-  const createArray = [];
+const scanAllGroups = async () => {
+  for(const group of groups){
+    try{
+      await getPosts(group.url, group.city);
+    }
+    catch{}
+  }
+}
+
+const preparePost = async (post, city, hashedText, postUrl) => {
+    console.log('passed')
+    const object = await useGPT(post.text);
+    return {
+      price: object.price,
+      city:  object.city || city,
+      provider: 'facebook',
+      squareSize: object.squareMeter,
+      rooms: object.roomsNumber,
+      location: object.location,
+      proximity: object.proximity,
+      floor: object.floor,
+      isBroker: object.isBroker,
+      contact: object.contact,
+      entryDate: object.entryDate,
+      moreDetails: object.moreDetails,
+      originalContent: post.text,
+      originalContentHash: hashedText,
+      imagesUrls: post.images, 
+      postUrl: postUrl
+    }
+}
+
+const getPosts = async (url, city) => {
+  const posts = await scrapy(url);
+  console.log(1)
+  const promiseArray = [];
   for(const post of posts){
     try{
-      const hashedText = hashString(post.text)
-      const existingListing = await DB.isListingExist(hashedText)
+      const hashedText = hashString(post.text);
+      const postUrl = removeQueryParameters(post.url);
+      const existingListing = await DB.isListingExist(postUrl)
+      console.log('isExist', existingListing)
       if(existingListing)
         continue;
-      const object = await useGPT(post.text);
-      createArray.push({
-        price: object.price,
-        city: 'tlv',
-        provider: 'facebook',
-        squareSize: object.squareMeter,
-        rooms: object.roomsNumber,
-        location: object.location,
-        proximity: object.proximity,
-        floor: object.floor,
-        isBroker: object.isBroker,
-        contact: object.contact,
-        entryDate: object.entryDate,
-        moreDetails: object.moreDetails,
-        originalContent: post.text,
-        originalContentHash: hashedText,
-        imagesUrls: post.images, 
-        postUrl: removeQueryParameters(post.url)
-      })
+      promiseArray.push(preparePost(post, city, hashedText, postUrl));
     }
-    catch(err){}
+    catch{}
   }
-  DB.createListings(createArray)
+  const promiseSettled = await Promise.allSettled(promiseArray);
+  const resolvedPromises = promiseSettled.filter(result => result.status === 'fulfilled');
+  const resolvedValues = resolvedPromises.map(result => result.value);
+  await DB.createListings(resolvedValues)
   console.log('posts', posts, posts.length);
 }
 
-getPosts();
+scanAllGroups();

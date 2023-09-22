@@ -173,29 +173,25 @@ module.exports.getUnNotifiedListings = async() => {
   return listings;
 }
 
-module.exports.isListingExist = async(hashedText) => {
+module.exports.isListingExist = async(postUrl) => {
   let listings;
   try {
-    listings = await Listing.findOne({
-      where: {
-        originalContentHash: hashedText,
-      },
-    });
+    listings = await Listing.findOne({where: { postUrl }});
   } catch (error) {
     console.log('failed to find unnotified listings', error)
   }
 
-  return listings;
+  return !!listings;
 }
 
 
 module.exports.getMatchingUsersForListing = async (listing) => {
   try {
     const floorPrice = Math.floor(listing.price/1000)*1000;
-    const topPrice = floorPrice >= 6000 ? floorPrice + 1500 : floorPrice + 1000;
+    const topPrice = floorPrice + 1000;
     const cityFiltered = `preferences.cities.${listing.city}`;
     const roomsFiltered = listing.rooms > 5 ? "preferences.rooms.5plus" : `preferences.rooms.${listing.rooms*10}rooms`;
-    const priceFiltered = floorPrice >= 10500 ? 'preferences.prices.10500plus' : `preferences.prices.${floorPrice}-${topPrice}`;
+    const priceFiltered = floorPrice >= 12000 ? 'preferences.prices.12000plus' : `preferences.prices.${floorPrice}-${topPrice}`;
     const whereClause =  {
       [cityFiltered]: true
     };
@@ -273,5 +269,3 @@ module.exports.isCriteriaMatchListing = async (chatId, listing) => {
 
   return isCriteriaMatch;
 };
-
-console.log('synccc')

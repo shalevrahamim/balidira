@@ -15,6 +15,7 @@ const a = '\n' +
 
 
 const useGPT = async (content) => {
+  console.log(content)
   const apiKey = process.env.OPENAI_KEY;
   const contentExample = "*הורדת מחיר*  בעקבות מעבר לחול מפנה את הדירה שלי אחרי עשר שנים!  דירת קרקע במרכז  ממוקמת בדב הז (פינת גורדון,בין דיזינגוף לבן יהודה) .   קרוב לחוף הים ולכיכר דיזינגוף.     מרכזית ושקטה.   שכירות ₪6,300 שח לחודש, אין ועד בית, חשבונות נמוכים.   גדולה-כ60 מ״ר. מתאימה לזוג/שותפים.  כניסה וחידוש חוזה ב19/09. ללא תיווך. יש חצר לדירה  וקודן לבניין. הדירה מסורגת. שתיים וחצי חדרים גדולים- סלון ,חדר שינה, מטבח ,שירותים ומקלחת בנפרד  בעל הדירה מקסים! *תנתן עדיפות*  למי שיקנה את  הריהוט של הבית/חלקו.  מראה הסופש ובראשון. לתיאום ופרטים נוספים בפרטי מרום 0548161226";
 
@@ -24,16 +25,18 @@ const useGPT = async (content) => {
   
   const conversation = [
     { role: 'system', content: 'You are a data extractor that convert text to json.' },
-    { role: 'user', content: `I will give you aparment listing content and you will extract the following properties.\nrules: remove double quetes from text. returned value should be valid json.\nreturned object structure: {price:integer, squareMeter:integer, roomsNumber:double, location:string, proximity:string, floor:string, isBroker:boolean, contact:string, entryDate:string, moreDetails:string}.\ndefault values: {price:null, squareMeter:null, roomsNumber:null, location:null, floor:null/(קרקע = 0), proximity:null, isBroker:false, contact:null, entryDate:null, moreDetails:null}.\n this is the listing: ${contentExample}` },
-    { role: 'assistant', content: '{"price": 6300, "squareMeter": 60, "roomsNumber": 2.5, "location": "דב הז (פינת גורדון,בין דיזינגוף לבן יהודה)", "proximity": "קרוב לחוף הים ולכיכר דיזינגוף", "floor": 0, "isBroker": false, "contact": "0548161226 מרום", "entryDate": "19/09", "moreDetails": "*תנתן עדיפות* למי שיקנה את הריהוט של הבית/חלקו. מראה הסופש ובראשון"}' },
+    { role: 'user', content: `I will give you aparment listing content and you will extract the following properties.\nrules: remove double quetes from text. returned value should be valid json.\nreturned object structure: {price:integer, squareMeter:integer, roomsNumber:double, location:string, city:string, proximity:string, floor:string, isBroker:boolean, contact:string, entryDate:string}.\ndefault values: {price:null, squareMeter:null, roomsNumber:null, location:null, city:(רמת גן = rmg, תל אביב = tlv, גבעתיים = gvtm if not exist then null) floor:null/(קרקע = 0), proximity:null, isBroker:false, contact:null, entryDate:null}.\n this is the listing: ${contentExample}` },
+    { role: 'assistant', content: '{"price": 6300, "squareMeter": 60, "roomsNumber": 2.5, "location": "דב הז (פינת גורדון,בין דיזינגוף לבן יהודה)", "proximity": "קרוב לחוף הים ולכיכר דיזינגוף", "floor": 0, "isBroker": false, "contact": "0548161226 מרום", "entryDate": "19/09""}' },
     { role: 'user', content: `${content}` }
   ];
   
+  console.log('gpt start')
   const response = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo', // Use the "model" parameter instead of "engine"
     messages: conversation,
-    max_tokens: 2500
+    max_tokens: 2000
   });
+  console.log('gpt end');
 
 
 
@@ -94,11 +97,6 @@ function parseObjectString(inputString) {
 
   const content = "*הורדת מחיר*  בעקבות מעבר לחול מפנה את הדירה שלי אחרי עשר שנים!  דירת קרקע במרכז  ממוקמת בדב הז (פינת גורדון,בין דיזינגוף לבן יהודה) .   קרוב לחוף הים ולכיכר דיזינגוף.     מרכזית ושקטה.   שכירות 6300 לחודש, אין ועד בית, חשבונות נמוכים.   גדולה-כ60 מ״ר. מתאימה לזוג/שותפים.  כניסה וחידוש חוזה ב19/09. ללא תיווך. יש חצר לדירה  וקודן לבניין. הדירה מסורגת.  2 חדרים גדולים- סלון ,חדר שינה, מטבח ,שירותים ומקלחת בנפרד  בעל הדירה מקסים! *תנתן עדיפות*  למי שיקנה את  הריהוט של הבית/חלקו.  מראה הסופש ובראשון. לתיאום ופרטים נוספים בפרטי מרום 0548161226";
 
-
-  
-  useGPT(content).then((result ) => {
-    console.log("result", result)
-  })
  //  console.log(a)
    //parseObjectString(a)
   

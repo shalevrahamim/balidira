@@ -14,6 +14,7 @@ const sendMessages = async () => {
     await listing.save();
   }
 }
+
 setTimeout(()=>{
   sendMessages();
 }, 5000)
