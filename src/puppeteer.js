@@ -1,39 +1,41 @@
-const puppeteer = require('puppeteer'); 
-const {useGPT} = require("./chatgpt");
-const crypto = require('crypto');
-const DB = require('./db.js');
+const puppeteer = require("puppeteer");
+const { useGPT } = require("./chatgpt");
+const crypto = require("crypto");
+const DB = require("./db.js");
 
 const groups = [
-  {city: 'tlv', url: 'https://www.facebook.com/groups/458499457501175/'},
-  {city: 'tlv', url: 'https://www.facebook.com/groups/2092819334342645/'},
-  {city: 'tlv', url: 'https://www.facebook.com/groups/ApartmentsTelAviv/'},
-  {city: 'tlv', url: 'https://www.facebook.com/groups/RentinTLV/'},
-  {city: 'tlv', url: 'https://www.facebook.com/groups/295395253832427/'},
-  {city: 'tlv', url: 'https://www.facebook.com/groups/telavivrentals/'},
-  {city: 'tlv', url: 'https://www.facebook.com/groups/1196843027043598/'},
-  {city: 'rmg', url: 'https://www.facebook.com/groups/253957624766723/'},
-  {city: 'rmg', url: 'https://www.facebook.com/groups/2642488706002536/'},
-  {city: 'rmg', url: 'https://www.facebook.com/groups/186810449287215/'},
-  {city: 'ptct', url: 'https://www.facebook.com/groups/248835652321875/'},
-  {city: 'ptct', url: 'https://www.facebook.com/groups/isaacnadlan.petahtikva/'},
-  {city: 'gvtm', url: 'https://www.facebook.com/groups/520940308003364/'},
-  {city: 'gvtm', url: 'https://www.facebook.com/groups/564985183576779/'},
-  {city: 'gvtm', url: 'https://www.facebook.com/groups/1424244737803677/'},
-  {city: 'gvtm', url: 'https://www.facebook.com/groups/1068642559922565/'},
-  {city: 'gvtm', url: 'https://www.facebook.com/groups/441654752934426/'},
-]
+  { city: "tlv", url: "https://www.facebook.com/groups/458499457501175/" },
+  { city: "tlv", url: "https://www.facebook.com/groups/2092819334342645/" },
+  { city: "tlv", url: "https://www.facebook.com/groups/ApartmentsTelAviv/" },
+  { city: "tlv", url: "https://www.facebook.com/groups/RentinTLV/" },
+  { city: "tlv", url: "https://www.facebook.com/groups/295395253832427/" },
+  { city: "tlv", url: "https://www.facebook.com/groups/telavivrentals/" },
+  { city: "tlv", url: "https://www.facebook.com/groups/1196843027043598/" },
+  { city: "rmg", url: "https://www.facebook.com/groups/253957624766723/" },
+  { city: "rmg", url: "https://www.facebook.com/groups/2642488706002536/" },
+  { city: "rmg", url: "https://www.facebook.com/groups/186810449287215/" },
+  { city: "ptct", url: "https://www.facebook.com/groups/248835652321875/" },
+  {
+    city: "ptct",
+    url: "https://www.facebook.com/groups/isaacnadlan.petahtikva/",
+  },
+  { city: "gvtm", url: "https://www.facebook.com/groups/520940308003364/" },
+  { city: "gvtm", url: "https://www.facebook.com/groups/564985183576779/" },
+  { city: "gvtm", url: "https://www.facebook.com/groups/1424244737803677/" },
+  { city: "gvtm", url: "https://www.facebook.com/groups/1068642559922565/" },
+  { city: "gvtm", url: "https://www.facebook.com/groups/441654752934426/" },
+];
 
 // Function to check if the page contains the text "more details" within a div with role="button"
 async function containsTextInRoleButton(page, text) {
   const elements = await page.$$('div[role="button"]');
   for (const element of elements) {
-    const textContent = await page.evaluate(el => el.textContent, element);
+    const textContent = await page.evaluate((el) => el.textContent, element);
     if (textContent.includes(text)) {
       try {
         await element.click();
-      }
-      catch(err){
-        console.log('err', err);
+      } catch (err) {
+        console.log("err", err);
       }
     }
   }
@@ -45,24 +47,23 @@ async function clickCloseButton(page) {
     const closeButton = await page.$('div[aria-label="Close"]');
     if (closeButton) {
       await closeButton.click();
-      console.log('Clicked the Close button');
+      console.log("Clicked the Close button");
     } else {
-      console.log('Close button not found');
+      console.log("Close button not found");
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
   }
 }
-
 
 const scrapy = async (url) => {
   try {
     // Launch a headless browser
-    const browser = await puppeteer.launch({headless: false});
-    
+    const browser = await puppeteer.launch({ headless: false });
+
     // Create a new page
     const page = await browser.newPage();
-    
+
     // Navigate to the webpage you want to interact with
     await page.goto(url);
     await page.waitForTimeout(500);
@@ -90,10 +91,14 @@ const scrapy = async (url) => {
     await page.waitForTimeout(2500);
 
     // If the page contains "more details" within a div with role="button", click on it
-    if (await containsTextInRoleButton(page, 'See more')) {
-      console.log('Clicked on "more details" link within a div with role="button".');
+    if (await containsTextInRoleButton(page, "See more")) {
+      console.log(
+        'Clicked on "more details" link within a div with role="button".'
+      );
     } else {
-      console.log('"More details" link not found within a div with role="button".');
+      console.log(
+        '"More details" link not found within a div with role="button".'
+      );
     }
 
     // Wait for a while to see the result of the click
@@ -102,42 +107,46 @@ const scrapy = async (url) => {
     const divSelector = 'div[role="feed"]'; // Selector for the div with role="feed"
 
     const posts = await page.evaluate(() => {
-      const postElements = Array.from(document.querySelectorAll('div[role="feed"] > div'));
-  
-      const postsArray = postElements.map(postElement => {
+      const postElements = Array.from(
+        document.querySelectorAll('div[role="feed"] > div')
+      );
+
+      const postsArray = postElements.map((postElement) => {
         const post = {};
-  
+
         // Extract text from the post
         post.text = postElement.textContent.trim();
-  
+
         // Extract URL from the post (contains 'posts' in href)
         const linkElement = postElement.querySelector('a[href*="posts"]');
         if (linkElement) {
-          post.url = linkElement.getAttribute('href');
+          post.url = linkElement.getAttribute("href");
         }
-  
+
         // Extract image URLs from the post
-        const imageElements = postElement.querySelectorAll('img');
-        post.images = Array.from(imageElements).map(imageElement => imageElement.getAttribute('src'));
-  
+        const imageElements = postElement.querySelectorAll("img");
+        post.images = Array.from(imageElements).map((imageElement) =>
+          imageElement.getAttribute("src")
+        );
+
         return post;
       });
-  
+
       return postsArray;
     });
     await browser.close();
-    return posts.filter(post => post.text != '' && post.images.length > 0)
+    return posts.filter((post) => post.text != "" && post.images.length > 0);
     // useGPT(filtered[0].text).then((res) => console.log('returned', res));
     // console.log('filtered:', filtered[0].text)
     // console.log(nestedElements.children.map(child => child.text));
     // Close the browser
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
   }
-}
+};
 
 function removeQueryParameters(url) {
-  const indexOfQuestionMark = url.indexOf('?');
+  const indexOfQuestionMark = url.indexOf("?");
   if (indexOfQuestionMark !== -1) {
     return url.substring(0, indexOfQuestionMark);
   }
@@ -145,64 +154,63 @@ function removeQueryParameters(url) {
 }
 
 function hashString(content) {
-  const hash = crypto.createHash('sha256');
+  const hash = crypto.createHash("sha256");
   hash.update(content);
-  return hash.digest('hex');
+  return hash.digest("hex");
 }
 
 const scanAllGroups = async () => {
-  for(const group of groups){
-    try{
+  for (const group of groups) {
+    try {
       await getPosts(group.url, group.city);
-    }
-    catch{}
+    } catch {}
   }
-}
+};
 
 const preparePost = async (post, city, hashedText, postUrl) => {
-    console.log('passed')
-    const object = await useGPT(post.text);
-    return {
-      price: object.price,
-      city:  object.city || city,
-      provider: 'facebook',
-      squareSize: object.squareMeter,
-      rooms: object.roomsNumber,
-      location: object.location,
-      proximity: object.proximity,
-      floor: object.floor,
-      isBroker: object.isBroker,
-      contact: object.contact,
-      entryDate: object.entryDate,
-      moreDetails: object.moreDetails,
-      originalContent: post.text,
-      originalContentHash: hashedText,
-      imagesUrls: post.images, 
-      postUrl: postUrl
-    }
-}
+  console.log("passed");
+  const object = await useGPT(post.text);
+  return {
+    price: object.price,
+    city: object.city || city,
+    provider: "facebook",
+    squareSize: object.squareMeter,
+    rooms: object.roomsNumber,
+    location: object.location,
+    proximity: object.proximity,
+    floor: object.floor,
+    isBroker: object.isBroker,
+    contact: object.contact,
+    entryDate: object.entryDate,
+    moreDetails: object.moreDetails,
+    originalContent: post.text,
+    originalContentHash: hashedText,
+    imagesUrls: post.images,
+    postUrl: postUrl,
+  };
+};
 
 const getPosts = async (url, city) => {
   const posts = await scrapy(url);
-  console.log(1)
+  console.log(1);
   const promiseArray = [];
-  for(const post of posts){
-    try{
+  for (const post of posts) {
+    try {
       const hashedText = hashString(post.text);
       const postUrl = removeQueryParameters(post.url);
-      const existingListing = await DB.isListingExist(postUrl)
-      console.log('isExist', existingListing)
-      if(existingListing)
-        continue;
+      const existingListing = await DB.isListingExist(postUrl);
+      console.log("isExist", existingListing);
+      if (existingListing) continue;
       promiseArray.push(preparePost(post, city, hashedText, postUrl));
-    }
-    catch{}
+    } catch {}
   }
   const promiseSettled = await Promise.allSettled(promiseArray);
-  const resolvedPromises = promiseSettled.filter(result => result.status === 'fulfilled');
-  const resolvedValues = resolvedPromises.map(result => result.value);
-  await DB.createListings(resolvedValues)
-  console.log('posts', posts, posts.length);
-}
+  const resolvedPromises = promiseSettled.filter(
+    (result) => result.status === "fulfilled"
+  );
+  const resolvedValues = resolvedPromises.map((result) => result.value);
+  await DB.createListings(resolvedValues);
+  console.log("posts", posts, posts.length);
+};
 
 scanAllGroups();
