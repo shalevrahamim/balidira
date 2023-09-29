@@ -3,29 +3,6 @@ const { useGPT } = require("./chatgpt");
 const crypto = require("crypto");
 const DB = require("./db.js");
 
-const groups = [
-  { city: "tlv", url: "https://www.facebook.com/groups/458499457501175/" },
-  { city: "tlv", url: "https://www.facebook.com/groups/2092819334342645/" },
-  { city: "tlv", url: "https://www.facebook.com/groups/ApartmentsTelAviv/" },
-  { city: "tlv", url: "https://www.facebook.com/groups/RentinTLV/" },
-  { city: "tlv", url: "https://www.facebook.com/groups/295395253832427/" },
-  { city: "tlv", url: "https://www.facebook.com/groups/telavivrentals/" },
-  { city: "tlv", url: "https://www.facebook.com/groups/1196843027043598/" },
-  { city: "rmg", url: "https://www.facebook.com/groups/253957624766723/" },
-  { city: "rmg", url: "https://www.facebook.com/groups/2642488706002536/" },
-  { city: "rmg", url: "https://www.facebook.com/groups/186810449287215/" },
-  { city: "ptct", url: "https://www.facebook.com/groups/248835652321875/" },
-  {
-    city: "ptct",
-    url: "https://www.facebook.com/groups/isaacnadlan.petahtikva/",
-  },
-  { city: "gvtm", url: "https://www.facebook.com/groups/520940308003364/" },
-  { city: "gvtm", url: "https://www.facebook.com/groups/564985183576779/" },
-  { city: "gvtm", url: "https://www.facebook.com/groups/1424244737803677/" },
-  { city: "gvtm", url: "https://www.facebook.com/groups/1068642559922565/" },
-  { city: "gvtm", url: "https://www.facebook.com/groups/441654752934426/" },
-];
-
 // Function to check if the page contains the text "more details" within a div with role="button"
 async function containsTextInRoleButton(page, text) {
   const elements = await page.$$('div[role="button"]');
@@ -66,7 +43,7 @@ const scrapy = async (url) => {
 
     // Navigate to the webpage you want to interact with
     await page.goto(url);
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(3000);
     await clickCloseButton(page);
     // Wait for the page to load completely
     // await page.waitForNaviation({ waitUntil: 'domcontentloaded' });
@@ -142,6 +119,7 @@ const scrapy = async (url) => {
     // Close the browser
   } catch (error) {
     console.error("Error:", error);
+    return [];
   }
 };
 
@@ -159,7 +137,7 @@ function hashString(content) {
   return hash.digest("hex");
 }
 
-const scanAllGroups = async () => {
+const scanAllGroups = async (groups) => {
   for (const group of groups) {
     try {
       await getPosts(group.url, group.city);
@@ -168,17 +146,19 @@ const scanAllGroups = async () => {
 };
 
 const preparePost = async (post, city, hashedText, postUrl) => {
-  console.log("passed");
   const object = await useGPT(post.text);
+  if(!object)
+    return null;
   return {
     price: object.price,
     city: object.city || city,
     provider: "facebook",
+    type: object.isRoommates ? 'rent-roommates' : "rent",
     squareSize: object.squareMeter,
     rooms: object.roomsNumber,
     location: object.location,
     proximity: object.proximity,
-    floor: object.floor,
+    floor: object.floor ? String(object.floor) : null,
     isBroker: object.isBroker,
     contact: object.contact,
     entryDate: object.entryDate,
@@ -192,7 +172,6 @@ const preparePost = async (post, city, hashedText, postUrl) => {
 
 const getPosts = async (url, city) => {
   const posts = await scrapy(url);
-  console.log(1);
   const promiseArray = [];
   for (const post of posts) {
     try {
@@ -213,4 +192,4 @@ const getPosts = async (url, city) => {
   console.log("posts", posts, posts.length);
 };
 
-scanAllGroups();
+module.exports.scanAllGroups = scanAllGroups;

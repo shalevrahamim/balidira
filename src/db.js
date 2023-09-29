@@ -98,6 +98,11 @@ const Listing = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    type: {
+      type: DataTypes.STRING,
+      defaultValue: "rent",
+      allowNull: false,
+    },
   },
   {
     indexes: [

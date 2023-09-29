@@ -18,7 +18,7 @@ const useGPT = async (content) => {
   console.log(content);
   const apiKey = process.env.OPENAI_KEY;
   const contentExample =
-    "*הורדת מחיר*  בעקבות מעבר לחול מפנה את הדירה שלי אחרי עשר שנים!  דירת קרקע במרכז  ממוקמת בדב הז (פינת גורדון,בין דיזינגוף לבן יהודה) .   קרוב לחוף הים ולכיכר דיזינגוף.     מרכזית ושקטה.   שכירות ₪6,300 שח לחודש, אין ועד בית, חשבונות נמוכים.   גדולה-כ60 מ״ר. מתאימה לזוג/שותפים.  כניסה וחידוש חוזה ב19/09. ללא תיווך. יש חצר לדירה  וקודן לבניין. הדירה מסורגת. שתיים וחצי חדרים גדולים- סלון ,חדר שינה, מטבח ,שירותים ומקלחת בנפרד  בעל הדירה מקסים! *תנתן עדיפות*  למי שיקנה את  הריהוט של הבית/חלקו.  מראה הסופש ובראשון. לתיאום ופרטים נוספים בפרטי מרום 0548161226";
+    "*הורדת מחיר*  בעקבות מעבר לחול מפנה את הדירה שלי בתל אביב אחרי עשר שנים! דירת קרקע במרכז ממוקמת בדב הז (פינת גורדון,בין דיזינגוף לבן יהודה). קרוב לחוף הים ולכיכר דיזינגוף. מרכזית ושקטה. שכירות ₪6,300 שח לחודש, אין ועד בית, חשבונות נמוכים. גדולה-כ60 מ״ר. מתאימה לזוג/שותפים. כניסה וחידוש חוזה ב19/09. ללא תיווך. יש חצר לדירה  וקודן לבניין. הדירה מסורגת. שתיים וחצי חדרים גדולים- סלון ,חדר שינה, מטבח ,שירותים ומקלחת בנפרד  בעל הדירה מקסים! *תנתן עדיפות*  למי שיקנה את  הריהוט של הבית/חלקו.  מראה הסופש ובראשון. לתיאום ופרטים נוספים בפרטי מרום 0548161226";
 
   const openai = new OpenAI({
     apiKey: apiKey,
@@ -31,17 +31,18 @@ const useGPT = async (content) => {
     },
     {
       role: "user",
-      content: `I will give you aparment listing content and you will extract the following properties.\nrules: remove double quetes from text. returned value should be valid json.\nreturned object structure: {price:integer, squareMeter:integer, roomsNumber:double, location:string, city:string, proximity:string, floor:string, isBroker:boolean, contact:string, entryDate:string}.\ndefault values: {price:null, squareMeter:null, roomsNumber:null, location:null, city:(רמת גן = rmg, תל אביב = tlv, גבעתיים = gvtm if not exist then null) floor:null/(קרקע = 0), proximity:null, isBroker:false, contact:null, entryDate:null}.\n this is the listing: ${contentExample}`,
+      content: `I will give you aparment listing content and you will extract the following properties.\nrules: remove double quetes from text. returned value should be valid json.\nreturned object structure: {price:integer, squareMeter:integer, roomsNumber:double, location:string, isRoommates: boolean, city:string, proximity:string, floor:string, isBroker:boolean, contact:string, entryDate:string}.\ndefault values: {price:null, squareMeter:null, roomsNumber:null, location:null, city:(רמת גן = rmg, תל אביב = tlv, גבעתיים = gvtm, פתח תקווה = ptct if not exist then null), floor:null, proximity:null, isRoommates: false, isBroker:false, contact:null, entryDate:null}.\n this is the listing: ${contentExample}`,
     },
     {
       role: "assistant",
       content:
-        '{"price": 6300, "squareMeter": 60, "roomsNumber": 2.5, "location": "דב הז (פינת גורדון,בין דיזינגוף לבן יהודה)", "proximity": "קרוב לחוף הים ולכיכר דיזינגוף", "floor": 0, "isBroker": false, "contact": "0548161226 מרום", "entryDate": "19/09""}',
+        '{"price": 6300, "isRoommates": false, "city": "tlv", "squareMeter": 60, "roomsNumber": 2.5, "location": "דפינת גורדון,בין דיזינגוף לבן יהודה", "proximity": "קרוב לחוף הים ולכיכר דיזינגוף", "floor": 0, "isBroker": false, "contact": "0548161226 מרום", "entryDate": "19/09""}',
     },
     { role: "user", content: `${content}` },
   ];
 
   console.log("gpt start");
+  console.log(conversation)
   const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo", // Use the "model" parameter instead of "engine"
     messages: conversation,
@@ -87,7 +88,6 @@ function parseObjectString(inputString) {
     const cleanedString = inputString
       .replace(/\s+/g, " ") // Replace consecutive spaces with a single space
       .replace(/\\n/g, ""); // Remove escaped newlines
-
     const objectString = cleanedString.match(/\{(.|\n)*\}/)[0]; // Extract the object part using regex
     console.log("objectString", objectString);
     const parsedObject = JSON.parse(objectString); // Parse the extracted object

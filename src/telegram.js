@@ -271,6 +271,8 @@ const sendMessage = async (chatId, list) => {
   const imageUrls = list.imagesUrls.filter((url) => url.includes("scontent"));
   const content = list.originalContent;
   const price = list.price;
+  const city = list.city;
+  const type = list.type;
   const squareSize = list.squareSize;
   const rooms = list.rooms;
   const location = list.location;
@@ -282,19 +284,20 @@ const sendMessage = async (chatId, list) => {
   const moreDetails = list.moreDetails;
   const postUrl = list.postUrl;
   try {
-    await bot.sendMessage(chatId, `⬇️ מצאתי לך דירה חדשה! 🎉🎉 ⬇️`);
     await sendArrayImages(chatId, imageUrls);
     await bot.sendMessage(
       chatId,
       `${isBroker ? "<b>🚨 מתיווך 🚨</b>\n\n" : ""}${
-        location ? `מיקום: <b>${location}</b>\n` : ""
+        location ? `מיקום: <b>${city}, ${location}</b>\n` : ""
       }${rooms ? `מספר חדרים: <b>${rooms}</b>\n` : ""}${
         squareSize ? `מר רבוע: <b>${squareSize}</b>\n` : ""
-      }${floor ? `קומה: <b>${floor}</b>\n` : ""}${
-        proximity ? `בקרבת: <b>${proximity}</b>\n` : ""
-      }${entryDate ? `תאריך כניסה: <b>${entryDate}</b>\n` : ""}\n${
-        price ? `מחיר: <b>${price} 🤑</b>\n` : ""
-      }${contact ? `יצירת קשר: <b>${contact} ☎️</b>\n` : ""}\n\n${
+      }${squareSize ? `סוג: <b>${type}</b>\n` : ""}${
+        floor ? `קומה: <b>${floor}</b>\n` : ""
+      }${proximity ? `בקרבת: <b>${proximity}</b>\n` : ""}${
+        entryDate ? `תאריך כניסה: <b>${entryDate}</b>\n` : ""
+      }\n${price ? `מחיר: <b>${price} 🤑</b>\n` : ""}${
+        contact ? `יצירת קשר: <b>${contact} ☎️</b>\n` : ""
+      }\n\n${
         moreDetails ? `פרטים נוספים: <b>${moreDetails}</b>\n` : ""
       }${postUrl}`,
       { parse_mode: "HTML" }
@@ -306,4 +309,14 @@ const sendMessage = async (chatId, list) => {
   }
 };
 
+const sendCustomMessage = async (chatId, customMessage) => {
+  try {
+    await bot.sendMessage(chatId, customMessage, { parse_mode: "HTML" });
+    await delay(2000);
+  } catch (e) {
+    return;
+  }
+};
+
 module.exports.sendMessage = sendMessage;
+module.exports.sendCustomMessage = sendCustomMessage;
