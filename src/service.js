@@ -2,6 +2,7 @@ const DB = require("./db.js");
 const Telegram = require("./telegram.js");
 const cron = require("node-cron");
 const { scanAllGroups } = require("./puppeteer.js");
+const { format } = require("date-fns");
 
 const groups = [
   { city: "tlv", url: "https://www.facebook.com/groups/458499457501175/" },
@@ -49,19 +50,39 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const sendMessages = async () => {
+const createMatchListings = async () => {
   const listings = await DB.getUnNotifiedListings();
+  const allUsers = {};
+  const userNames = {};
   for (const listing of listings) {
     const users = await DB.getMatchingUsersForListing(listing);
-    const sendAllUsersPromise = [];
     for (const user of users) {
-      sendAllUsersPromise.push(Telegram.sendMessage(user.chat_id, listing));
-      await delay(300);
+      if (!allUsers[user.chat_id]) {
+        allUsers[user.chat_id] = [];
+      }
+      userNames[user.chat_id] = user.preferences.name;
+      allUsers[user.chat_id].push({
+        listingId: listing.id,
+        isNotified: false,
+      });
     }
-    await Promise.all(sendAllUsersPromise);
-    listing.isNotified = true;
-    await listing.save();
-    if (users.length != 0) await delay(1000);
+    // listing.isNotified = true;
+    // await listing.save();
+  }
+  const formattedDate = format(Date.now(), "yyyy.MM.dd");
+  const matchesListings = [];
+  for (const chatId in allUsers) {
+    matchesListings.push({
+      period: formattedDate,
+      chat_id: chatId,
+      listings: allUsers[chatId],
+    });
+  }
+  // console.log(allUsers[334337635].length);
+  DB.createMatchListings(matchesListings);
+  for (const match of matchesListings) {
+    console.log(userNames[match.chat_id]);
+    await Telegram.sendTotalFoundMessage(userNames[match.chat_id], match);
   }
 };
 
@@ -73,11 +94,22 @@ const sendMessages = async () => {
 //   }
 // });
 
-cron.schedule("37 19 * * *", () => {
-  sendMessages();
+cron.schedule("44 20 * * *", () => {
+  createMatchListings();
 });
 
-cron.schedule("00 14 * * *", () => {
+cron.schedule("00 19 * * *", () => {
+  try {
+    Telegram.sendCustomMessage("334337635", "test1");
+    const slicedGroup = groups.slice(
+      (groups.length / 9) * 1,
+      (groups.length / 9) * 2
+    );
+    scanAllGroups(slicedGroup);
+  } catch {}
+});
+
+cron.schedule("00 18 * * *", () => {
   try {
     Telegram.sendCustomMessage("334337635", "test1");
     const slicedGroup = groups.slice(
@@ -88,7 +120,7 @@ cron.schedule("00 14 * * *", () => {
   } catch {}
 });
 
-cron.schedule("00 15 * * *", () => {
+cron.schedule("00 17 * * *", () => {
   try {
     Telegram.sendCustomMessage("334337635", "test2");
     const slicedGroup = groups.slice(
@@ -110,7 +142,7 @@ cron.schedule("00 16 * * *", () => {
   } catch {}
 });
 
-cron.schedule("00 17 * * *", () => {
+cron.schedule("00 15 * * *", () => {
   try {
     Telegram.sendCustomMessage("334337635", "test4");
     const slicedGroup = groups.slice(
@@ -121,7 +153,7 @@ cron.schedule("00 17 * * *", () => {
   } catch {}
 });
 
-cron.schedule("00 18 * * *", () => {
+cron.schedule("00 14 * * *", () => {
   try {
     Telegram.sendCustomMessage("334337635", "test5");
     const slicedGroup = groups.slice(
@@ -132,7 +164,7 @@ cron.schedule("00 18 * * *", () => {
   } catch {}
 });
 
-cron.schedule("48 18 * * *", () => {
+cron.schedule("00 13 * * *", () => {
   try {
     Telegram.sendCustomMessage("334337635", "test6");
     const slicedGroup = groups.slice(
@@ -143,7 +175,7 @@ cron.schedule("48 18 * * *", () => {
   } catch {}
 });
 
-cron.schedule("30 19 * * *", () => {
+cron.schedule("00 12 * * *", () => {
   try {
     Telegram.sendCustomMessage("334337635", "test7");
     const slicedGroup = groups.slice(

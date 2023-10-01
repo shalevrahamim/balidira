@@ -9,7 +9,10 @@ const translation = {
   roomsOptions: "1,1.5,2,2.5,3,3.5,4,5,6",
   howMuchPrice: "מה טווח המחירים שמתאים לך? (ניתן לבחור מספר אופציות)",
   gettingStarted:
-    "מעולה, אני יודעת מספיק בשביל להתחיל להביא לך נכסים. בכל שלב אם ניתן לחזור לתפריט הראשי, יש לכתוב (/start) בצ'אט. כרגע אני מחפשת לך דירה, ברגע שאמצע אעדכן אותך!",
+    "מעולה 🤩 אני יודעת מספיק בשביל להתחיל להביא לך דירות.\nבכל יום אשלח לך בשעות הערב סיכום של כל הדירות שסרקתי באותו היום.\n\nעל מנת להגיע לתפריט יש לכתוב ('/') בצ'אט ולבחור באופציה הרצויה.",
+  feedback:
+    "אני תמיד שמחה לקבל פידבק חיובי או שלילי ככל שיהיה, מחכה כבר לקבל אותו 🤩",
+  thanksFeedback: "תודה רבה על הביקורת הבונה!",
 };
 
 module.exports = translation;

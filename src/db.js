@@ -26,6 +26,38 @@ const User = sequelize.define("user", {
   },
 });
 
+const Feedback = sequelize.define("feedback", {
+  id: {
+    type: Sequelize.UUID,
+    defaultValue: Sequelize.UUIDV4,
+    allowNull: false,
+    primaryKey: true,
+  },
+  chat_id: {
+    type: DataTypes.STRING,
+  },
+  feedback: {
+    type: DataTypes.STRING,
+  },
+});
+
+const matchListing = sequelize.define("match_listings", {
+  id: {
+    type: Sequelize.UUID,
+    defaultValue: Sequelize.UUIDV4,
+    allowNull: false,
+    primaryKey: true,
+  },
+  period: { type: DataTypes.STRING },
+  chat_id: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  listings: {
+    type: DataTypes.JSONB,
+  },
+});
+
 const Listing = sequelize.define(
   "listing",
   {
@@ -131,7 +163,6 @@ module.exports.createOrUpdateUser = async ({ chatId, preferences }) => {
     // User exists, update preferences
     user.preferences = preferences;
     await user.save();
-    console.log("user updated");
   } else {
     // User does not exist, create a new user
     const newUser = {
@@ -143,6 +174,14 @@ module.exports.createOrUpdateUser = async ({ chatId, preferences }) => {
     console.log("New user created:", user.toJSON());
   }
   return user.toJSON();
+};
+
+module.exports.addFeedback = async (chatId, feedback) => {
+  const newFeedback = {
+    chat_id: chatId,
+    feedback,
+  };
+  await Feedback.create(newFeedback);
 };
 
 module.exports.getAllUsers = async () => {
@@ -166,13 +205,23 @@ module.exports.createListings = async (listings) => {
   });
 };
 
+module.exports.createMatchListings = async (matches) => {
+  await Promise.each(matches, async (match) => {
+    try {
+      await matchListing.create(match);
+    } catch (error) {
+      console.error("failed to create listing", error);
+    }
+  });
+};
+
 module.exports.getUnNotifiedListings = async () => {
   let listings;
   try {
     listings = await Listing.findAll({
       where: {
         isNotified: false,
-      }
+      },
     });
   } catch (error) {
     console.log("failed to find unnotified listings", error);
@@ -211,14 +260,25 @@ module.exports.getMatchingUsersForListing = async (listing) => {
       [priceFiltered]: true,
     };
     const matchingUsers = await User.findAll({ where: whereClause });
-    console.log(
-      "***users",
-      matchingUsers.map((user) => user.toJSON())
-    );
     return matchingUsers.map((user) => user.toJSON());
   } catch (error) {
     console.error("Error while fetching matching users:", error);
     throw error;
+  }
+};
+
+module.exports.getMatchListing = async (chatId, period) => {
+  try {
+    const matchList = await matchListing.findOne({
+      where: {
+        chat_id: String(chatId),
+        period,
+      },
+    });
+    return matchList;
+  } catch (error) {
+    console.error("failed to find user with chatId", { chatId, error });
+    return null;
   }
 };
 
@@ -244,6 +304,20 @@ module.exports.getUser = async (chatId) => {
   }
 
   return user.toJSON();
+};
+
+module.exports.getListing = async (listingId) => {
+  let listing;
+  try {
+    listing = await Listing.findOne({
+      where: {
+        id: listingId,
+      },
+    });
+  } catch (error) {
+    console.error("failed to find user with chatId", { chatId, error });
+  }
+  return listing.toJSON();
 };
 
 const creteriaClause = async (preferences) => {

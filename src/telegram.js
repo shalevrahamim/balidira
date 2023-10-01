@@ -1,6 +1,7 @@
 const TelegramBot = require("node-telegram-bot-api");
 const translation = require("./translation.js");
 const DB = require("./db.js");
+const { cloneDeep } = require("lodash");
 require("dotenv").config();
 
 let chatStates = {};
@@ -87,6 +88,7 @@ const states = {
   ROOMS_MULTISELECT: "rooms_multiselect",
   PRICE: "price",
   PRICE_MULTISELECT: "price_multiselect",
+  FEEDBACK: "feedback",
   DONE: "done",
 };
 
@@ -104,6 +106,10 @@ bot.on("message", async (msg) => {
       };
       bot.sendMessage(chatId, translation.welcome, options);
       moveToState(chatId, states.WELCOME, true);
+      break;
+    case "/feedback":
+      bot.sendMessage(chatId, translation.feedback);
+      moveToState(chatId, states.FEEDBACK);
       break;
     default:
       // Process user input based on the current state
@@ -155,18 +161,11 @@ bot.on("callback_query", async (query) => {
           "cities",
           selectedOption
         );
-        console.log(
-          "loook",
-          currentState,
-          selectedOption,
-          updatedInlineKeyboard
-        );
         bot.editMessageReplyMarkup(updatedInlineKeyboard, {
           chat_id: chatId,
           message_id: query.message.message_id,
         });
       } else {
-        console.log("optionss");
         const options = {
           reply_markup: {
             inline_keyboard: roomsOptions,
@@ -215,6 +214,38 @@ bot.on("callback_query", async (query) => {
         moveToState(chatId, states.DONE);
       }
       break;
+    case states.FEEDBACK:
+    case states.DONE:
+      if (selectedOption.includes("listings_")) {
+        const period = selectedOption.slice(selectedOption.indexOf("_") + 1);
+        const matchListing = await DB.getMatchListing(chatId, period);
+        if (!matchListing) return;
+        const listings = cloneDeep(matchListing.listings);
+        let notifiedListings = 0;
+        for (const listing of listings) {
+          if (notifiedListings >= 3) break;
+          if (listing.isNotified) continue;
+          listing.isNotified = true;
+          const listingObj = await DB.getListing(listing.listingId);
+          await sendMessage(chatId, listingObj);
+          notifiedListings++;
+        }
+        const unNotifiedListingsLength = listings.filter(
+          (obj) => !obj.isNotified
+        ).length;
+        matchListing.listings = listings;
+        await matchListing.save();
+        console.log(
+          "***press more listings",
+          chatId,
+          listings.length,
+          unNotifiedListingsLength
+        );
+        if (unNotifiedListingsLength != 0)
+          sendMoreListings(chatId, unNotifiedListingsLength, period);
+        else sendCustomMessage(chatId, "לא נותרו דירות להצגה ליום זה");
+      }
+      break;
   }
 });
 
@@ -249,6 +280,12 @@ const processUserInput = async (chatId, messageText) => {
         options
       );
       moveToState(chatId, states.CITY_MULTISELECT);
+      break;
+    case states.FEEDBACK:
+      await DB.addFeedback(chatId, messageText);
+      bot.sendMessage(chatId, translation.thanksFeedback);
+      moveToState(chatId, states.DONE);
+      break;
   }
 };
 
@@ -299,9 +336,7 @@ const sendMessage = async (chatId, list) => {
     await bot.sendMessage(
       chatId,
       `${isBroker ? "<b>🚨 מתיווך 🚨</b>\n" : ""}${
-        "rent-roommates" == type
-          ? `<b>מתאים לשותפים 👥</b>\n\n`
-          : "\n"
+        "rent-roommates" == type ? `<b>מתאים לשותפים 👥</b>\n\n` : "\n"
       }מיקום: <b>${citiesKeys[city]}${location ? `, ${location}` : ""}</b>\n${
         rooms ? `מספר חדרים: <b>${rooms}</b>\n` : ""
       }${squareSize ? `גודל: <b>${squareSize} מטר רבוע</b>\n` : ""}${
@@ -313,16 +348,50 @@ const sendMessage = async (chatId, list) => {
       }\n\n${postUrl}`,
       { parse_mode: "HTML" }
     );
+    await delay(300);
   } catch (e) {
     console.log("error", price, squareSize, location, postUrl, e);
     return;
   }
 };
 
-const sendCustomMessage = async (chatId, customMessage) => {
+const sendTotalFoundMessage = async (userName, match) => {
+  const options = {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "שלחי לי דירות", callback_data: `listings_${match.period}` }],
+      ],
+    },
+  };
+  await sendCustomMessage(
+    match.chat_id,
+    `היי ${userName}, היום מצאתי בשבילך <b>${match.listings.length} דירות</b> חדשות.\nלשלוח לך אותן?`,
+    options
+  );
+};
+
+const sendMoreListings = async (chatId, listingLength, period) => {
+  const options = {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "שלחי לי עוד דירות", callback_data: `listings_${period}` }],
+      ],
+    },
+  };
+  await sendCustomMessage(
+    chatId,
+    `נותרו עוד <b>${listingLength} דירות</b> להצגה`,
+    options
+  );
+};
+
+const sendCustomMessage = async (chatId, customMessage, options) => {
   try {
-    await bot.sendMessage(chatId, customMessage, { parse_mode: "HTML" });
-    await delay(2000);
+    await bot.sendMessage(chatId, customMessage, {
+      ...options,
+      parse_mode: "HTML",
+    });
+    await delay(300);
   } catch (e) {
     return;
   }
@@ -330,3 +399,4 @@ const sendCustomMessage = async (chatId, customMessage) => {
 
 module.exports.sendMessage = sendMessage;
 module.exports.sendCustomMessage = sendCustomMessage;
+module.exports.sendTotalFoundMessage = sendTotalFoundMessage;
