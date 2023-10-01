@@ -172,7 +172,7 @@ module.exports.getUnNotifiedListings = async () => {
     listings = await Listing.findAll({
       where: {
         isNotified: false,
-      },
+      }
     });
   } catch (error) {
     console.log("failed to find unnotified listings", error);
@@ -207,12 +207,10 @@ module.exports.getMatchingUsersForListing = async (listing) => {
         : `preferences.prices.${floorPrice}-${topPrice}`;
     const whereClause = {
       [cityFiltered]: true,
+      [roomsFiltered]: true,
+      [priceFiltered]: true,
     };
-    if (listing.rooms) whereClause[roomsFiltered] = true;
-    if (listing.price) whereClause[priceFiltered] = true;
-    console.log("whereClause", whereClause);
     const matchingUsers = await User.findAll({ where: whereClause });
-    console.log("***filter", cityFiltered, roomsFiltered, priceFiltered);
     console.log(
       "***users",
       matchingUsers.map((user) => user.toJSON())

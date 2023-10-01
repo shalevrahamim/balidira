@@ -46,7 +46,7 @@ const useGPT = async (content) => {
   const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo", // Use the "model" parameter instead of "engine"
     messages: conversation,
-    max_tokens: 2000,
+    max_tokens: 800,
   });
   console.log("gpt end");
 
@@ -77,7 +77,7 @@ const useGPT = async (content) => {
 
   //       // Handle the response JSON object
   //       console.log(data);
-  console.log(response.usage.total_tokens);
+  console.log(response.usage);
 
   console.log(parseObjectString(response.choices[0].message.content));
   return parseObjectString(response.choices[0].message.content);

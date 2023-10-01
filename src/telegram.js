@@ -5,14 +5,27 @@ require("dotenv").config();
 
 let chatStates = {};
 
+const citiesKeys = {
+  tlv: "תל אביב",
+  ptct: "פתח תקווה",
+  rmg: "רמת גן",
+  gvtm: "גבעתיים",
+};
+
+const listTypeKeys = {
+  rent: "שכירות",
+  "rent-roommates": "שכירות מתאים לשותפים",
+  sell: "מכירה",
+};
+
 const citiesOptions = [
   [
-    { text: "תל אביב", callback_data: "tlv" },
-    { text: "פתח תקווה", callback_data: "ptct" },
+    { text: citiesKeys.tlv, callback_data: "tlv" },
+    { text: citiesKeys.ptct, callback_data: "ptct" },
   ],
   [
-    { text: "רמת גן", callback_data: "rmg" },
-    { text: "גבעתיים", callback_data: "gvtm" },
+    { text: citiesKeys.rmg, callback_data: "rmg" },
+    { text: citiesKeys.gvtm, callback_data: "gvtm" },
   ],
   [{ text: "אישור", callback_data: "confirm" }],
 ];
@@ -269,7 +282,6 @@ function delay(ms) {
 const sendMessage = async (chatId, list) => {
   if (!list.price) return;
   const imageUrls = list.imagesUrls.filter((url) => url.includes("scontent"));
-  const content = list.originalContent;
   const price = list.price;
   const city = list.city;
   const type = list.type;
@@ -281,30 +293,28 @@ const sendMessage = async (chatId, list) => {
   const isBroker = list.isBroker;
   const contact = list.contact;
   const entryDate = list.entryDate;
-  const moreDetails = list.moreDetails;
   const postUrl = list.postUrl;
   try {
     await sendArrayImages(chatId, imageUrls);
     await bot.sendMessage(
       chatId,
-      `${isBroker ? "<b>🚨 מתיווך 🚨</b>\n\n" : ""}${
-        location ? `מיקום: <b>${city}, ${location}</b>\n` : ""
-      }${rooms ? `מספר חדרים: <b>${rooms}</b>\n` : ""}${
-        squareSize ? `מר רבוע: <b>${squareSize}</b>\n` : ""
-      }${squareSize ? `סוג: <b>${type}</b>\n` : ""}${
+      `${isBroker ? "<b>🚨 מתיווך 🚨</b>\n" : ""}${
+        "rent-roommates" == type
+          ? `<b>מתאים לשותפים 👥</b>\n\n`
+          : "\n"
+      }מיקום: <b>${citiesKeys[city]}${location ? `, ${location}` : ""}</b>\n${
+        rooms ? `מספר חדרים: <b>${rooms}</b>\n` : ""
+      }${squareSize ? `גודל: <b>${squareSize} מטר רבוע</b>\n` : ""}${
         floor ? `קומה: <b>${floor}</b>\n` : ""
       }${proximity ? `בקרבת: <b>${proximity}</b>\n` : ""}${
         entryDate ? `תאריך כניסה: <b>${entryDate}</b>\n` : ""
       }\n${price ? `מחיר: <b>${price} 🤑</b>\n` : ""}${
-        contact ? `יצירת קשר: <b>${contact} ☎️</b>\n` : ""
-      }\n\n${
-        moreDetails ? `פרטים נוספים: <b>${moreDetails}</b>\n` : ""
-      }${postUrl}`,
+        contact ? `יצירת קשר: <b>${contact} ☎️</b>` : ""
+      }\n\n${postUrl}`,
       { parse_mode: "HTML" }
     );
-    await delay(2000);
   } catch (e) {
-    console.log(price, squareSize, location, postUrl);
+    console.log("error", price, squareSize, location, postUrl, e);
     return;
   }
 };
