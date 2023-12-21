@@ -1,5 +1,5 @@
 const puppeteer = require("puppeteer");
-const { useGPT } = require("./chatgpt");
+const { useGPT, ProvidersGPT } = require("./chatgpt");
 const crypto = require("crypto");
 const DB = require("./db.js");
 
@@ -146,14 +146,14 @@ const scanAllGroups = async (groups) => {
 };
 
 const preparePost = async (post, city, hashedText, postUrl) => {
-  const object = await useGPT(post.text);
-  if(!object)
-    return null;
+  const object = await useGPT(post.text, ProvidersGPT.facebook);
+  if (!object) return null;
+  if (!object.price || !object.roomsNumber) return null;
   return {
     price: object.price,
     city: object.city || city,
     provider: "facebook",
-    type: object.isRoommates ? 'rent-roommates' : "rent",
+    type: object.isRoommates ? "rent-roommates" : "rent",
     squareSize: object.squareMeter,
     rooms: object.roomsNumber,
     location: object.location,

@@ -11,7 +11,7 @@ const translation = {
   gettingStarted:
     "מעולה 🤩 אני יודעת מספיק בשביל להתחיל להביא לך דירות.\nבכל יום אשלח לך בשעות הערב סיכום של כל הדירות שסרקתי באותו היום.\n\nעל מנת להגיע לתפריט יש לכתוב ('/') בצ'אט ולבחור באופציה הרצויה.",
   feedback:
-    "אני תמיד שמחה לקבל פידבק חיובי או שלילי ככל שיהיה, מחכה כבר לקבל אותו 🤩",
+    "אני תמיד שמחה לקבל פידבק חיובי או שלילי ככל שיהיה 🤩 יש לכתוב בצ'אט את הפידבק",
   thanksFeedback: "תודה רבה על הביקורת הבונה!",
 };
 

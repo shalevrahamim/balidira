@@ -78,7 +78,7 @@ const createMatchListings = async () => {
       listings: allUsers[chatId],
     });
   }
-  // console.log(allUsers[334337635].length);
+  console.log(allUsers[334337635].length);
   DB.createMatchListings(matchesListings);
   for (const match of matchesListings) {
     console.log(userNames[match.chat_id]);
@@ -86,104 +86,118 @@ const createMatchListings = async () => {
   }
 };
 
-// cron.schedule("15 19 * * *", async () => {
+// cron.schedule("47 16 * * *", async () => {
 //   const users = await DB.getAllUsers();
 //   for (const user of users) {
-//     Telegram.sendCustomMessage(user.chat_id, `שבוע טוב ${user?.preferences?.name},\n לא לדאוג אני כאן ובקרוב אשלח לך כמה דירות שמצאתי\n\nאתי`);
+//     Telegram.sendCustomMessage(
+//       user.chat_id,
+//       `השבוע הראשון נגמר ואני מתרגשת ברמות של כלה! 🤩\nאני משתדלת כל הזמן להשתפר ולדייק את עצמי עבור המשתמשים שלי ואני רוצה לשתף אתכם קצת ממה שהיה לנו השבוע:\n\n1. בעקבות תלונות שקצת חפרתי החלטתי מעכשיו לשלוח הודעת סיכום אחת ביום ולשלוח לכם את המודעות בצורה יותר נעימה ונוחה עבורכם.\n\n2. אם שמתם לב אתמול התחלתי לסרוק בנוסף גם את <b>יד 2!</b> זו אבן דרך משמעותית עבורי דרכה אני מוסיפה עוד מאות דירות כל יום להפצה!\nמה שמיוחד בסריקות של יד 2 זה שאני מראה אך ורק דירות <b>חדשות</b> מאותו היום בלבד, לא דירות מוקפצות.\nבנוסף כחלק ממאמצים למגר את תופעת התיווך החלטתי לא לספק מודעות ממומנות על ידי חברות תיווך ביד 2, לכן כל המודעות שתראו אצלי הינם מודעות חדשות ואוטנטיות בלבד.\n\nאני משתדלת תמיד להתעדכן ולהשתפר וכחלק מהמאצים אני תמיד אשמח לקבל פידבק, על ידי כתיבה של (/feedback) בצ'אט.\n\nובנימה אישית <b>${user?.preferences?.name}</b> אני רוצה לאחל לך שיהיה לך שבת שלום וחג שמח! 🌾🤍`
+//     );
 //     await delay(100);
 //   }
 // });
 
-cron.schedule("44 20 * * *", () => {
-  createMatchListings();
-});
+// cron.schedule("00 21 * * *", () => {
+//   createMatchListings();
+// });
 
-cron.schedule("00 19 * * *", () => {
-  try {
-    Telegram.sendCustomMessage("334337635", "test1");
-    const slicedGroup = groups.slice(
-      (groups.length / 9) * 1,
-      (groups.length / 9) * 2
-    );
-    scanAllGroups(slicedGroup);
-  } catch {}
-});
+// cron.schedule("10 21 * * *", () => {
+//   try {
+//     Telegram.sendCustomMessage("334337635", "test1");
+//     const slicedGroup = groups.slice(
+//       (groups.length / 9) * 0,
+//       (groups.length / 9) * 1
+//     );
+//     scanAllGroups(slicedGroup);
+//   } catch {}
+// });
 
-cron.schedule("00 18 * * *", () => {
-  try {
-    Telegram.sendCustomMessage("334337635", "test1");
-    const slicedGroup = groups.slice(
-      (groups.length / 9) * 2,
-      (groups.length / 9) * 3
-    );
-    scanAllGroups(slicedGroup);
-  } catch {}
-});
+// cron.schedule("13 21 * * *", () => {
+//   try {
+//     Telegram.sendCustomMessage("334337635", "test1");
+//     const slicedGroup = groups.slice(
+//       (groups.length / 9) * 1,
+//       (groups.length / 9) * 2
+//     );
+//     scanAllGroups(slicedGroup);
+//   } catch {}
+// });
 
-cron.schedule("00 17 * * *", () => {
-  try {
-    Telegram.sendCustomMessage("334337635", "test2");
-    const slicedGroup = groups.slice(
-      (groups.length / 9) * 3,
-      (groups.length / 9) * 4
-    );
-    scanAllGroups(slicedGroup);
-  } catch {}
-});
+// cron.schedule("04 17 * * *", () => {
+//   try {
+//     Telegram.sendCustomMessage("334337635", "test1");
+//     const slicedGroup = groups.slice(
+//       (groups.length / 9) * 2,
+//       (groups.length / 9) * 3
+//     );
+//     scanAllGroups(slicedGroup);
+//   } catch {}
+// });
 
-cron.schedule("00 16 * * *", () => {
-  try {
-    Telegram.sendCustomMessage("334337635", "test3");
-    const slicedGroup = groups.slice(
-      (groups.length / 9) * 4,
-      (groups.length / 9) * 5
-    );
-    scanAllGroups(slicedGroup);
-  } catch {}
-});
+// cron.schedule("57 15 * * *", () => {
+//   try {
+//     Telegram.sendCustomMessage("334337635", "test2");
+//     const slicedGroup = groups.slice(
+//       (groups.length / 9) * 3,
+//       (groups.length / 9) * 4
+//     );
+//     scanAllGroups(slicedGroup);
+//   } catch {}
+// });
 
-cron.schedule("00 15 * * *", () => {
-  try {
-    Telegram.sendCustomMessage("334337635", "test4");
-    const slicedGroup = groups.slice(
-      (groups.length / 9) * 5,
-      (groups.length / 9) * 6
-    );
-    scanAllGroups(slicedGroup);
-  } catch {}
-});
+// cron.schedule("43 14 * * *", () => {
+//   try {
+//     Telegram.sendCustomMessage("334337635", "test3");
+//     const slicedGroup = groups.slice(
+//       (groups.length / 9) * 4,
+//       (groups.length / 9) * 5
+//     );
+//     scanAllGroups(slicedGroup);
+//   } catch {}
+// });
 
-cron.schedule("00 14 * * *", () => {
-  try {
-    Telegram.sendCustomMessage("334337635", "test5");
-    const slicedGroup = groups.slice(
-      (groups.length / 9) * 6,
-      (groups.length / 9) * 7
-    );
-    scanAllGroups(slicedGroup);
-  } catch {}
-});
+// cron.schedule("33 13 * * *", () => {
+//   try {
+//     Telegram.sendCustomMessage("334337635", "test4");
+//     const slicedGroup = groups.slice(
+//       (groups.length / 9) * 5,
+//       (groups.length / 9) * 6
+//     );
+//     scanAllGroups(slicedGroup);
+//   } catch {}
+// });
 
-cron.schedule("00 13 * * *", () => {
-  try {
-    Telegram.sendCustomMessage("334337635", "test6");
-    const slicedGroup = groups.slice(
-      (groups.length / 9) * 7,
-      (groups.length / 9) * 8
-    );
-    scanAllGroups(slicedGroup);
-  } catch {}
-});
+// cron.schedule("24 12 * * *", () => {
+//   try {
+//     Telegram.sendCustomMessage("334337635", "test5");
+//     const slicedGroup = groups.slice(
+//       (groups.length / 9) * 6,
+//       (groups.length / 9) * 7
+//     );
+//     scanAllGroups(slicedGroup);
+//   } catch {}
+// });
 
-cron.schedule("00 12 * * *", () => {
-  try {
-    Telegram.sendCustomMessage("334337635", "test7");
-    const slicedGroup = groups.slice(
-      (groups.length / 9) * 8,
-      (groups.length / 9) * 9
-    );
-    scanAllGroups(slicedGroup);
-  } catch {}
-});
+// // cron.schedule("05 11 * * *", () => {
+// //   try {
+// //     Telegram.sendCustomMessage("334337635", "test6");
+// //     const slicedGroup = groups.slice(
+// //       (groups.length / 9) * 7,
+// //       (groups.length / 9) * 8
+// //     );
+// //     scanAllGroups(slicedGroup);
+// //   } catch {}
+// // });
+
+// cron.schedule("15 10 * * *", () => {
+//   try {
+//     Telegram.sendCustomMessage("334337635", "test7");
+//     const slicedGroup = groups.slice(
+//       (groups.length / 9) * 8,
+//       (groups.length / 9) * 9
+//     );
+//     scanAllGroups(slicedGroup);
+//   } catch {}
+// });
 
 Telegram.sendCustomMessage("334337635", "started");
