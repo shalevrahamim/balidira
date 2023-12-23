@@ -2,7 +2,6 @@ const TelegramBot = require("node-telegram-bot-api");
 const translation = require("./translation.js");
 const DB = require("./db.js");
 const { cloneDeep } = require("lodash");
-require("dotenv").config();
 
 let chatStates = {};
 
@@ -11,12 +10,6 @@ const citiesKeys = {
   ptct: "פתח תקווה",
   rmg: "רמת גן",
   gvtm: "גבעתיים",
-};
-
-const listTypeKeys = {
-  rent: "שכירות",
-  "rent-roommates": "שכירות מתאים לשותפים",
-  sell: "מכירה",
 };
 
 const citiesOptions = [
@@ -309,8 +302,6 @@ const sendArrayImages = async (chatId, imageUrls) => {
     console.error("Error sending images:", error);
   });
 };
-
-const matchMaking = async () => {};
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
