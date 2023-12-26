@@ -1,7 +1,5 @@
 const Sequelize = require("sequelize");
-
 const { DataTypes, Op } = Sequelize;
-
 const { Promise } = require("bluebird");
 
 console.log("script started");
