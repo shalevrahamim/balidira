@@ -6,6 +6,7 @@
     "start:scrapy": "node src/puppeteer.js",
     "start:telegram": "node src/telegram.js",
     "start:service": "node src/service.js",
+    "start": "node src/service.js",
     "start:gpt": "node src/chatgpt.js"
   },
   "keywords": [
