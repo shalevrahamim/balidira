@@ -2,7 +2,7 @@ require('dotenv').config()
 const DB = require("./db.js");
 const Telegram = require("./telegram.js");
 
-// const cron = require("node-cron");
+const cron = require("node-cron");
 // const { scanAllGroups } = require("./puppeteer.js");
 const { format } = require("date-fns");
 // const groups = [
