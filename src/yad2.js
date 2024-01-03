@@ -2,6 +2,14 @@ const puppeteer = require("puppeteer");
 const { useGPT, ProvidersGPT } = require("./chatgpt");
 const DB = require("./db.js");
 
+const telAviv = {cityKey: 'tlv', cityCode: 5000,area:1, topArea: 2};
+const ramatGan = {cityKey: 'rmg',cityCode: 8600,area:3, topArea: 2}
+const ptct = {cityKey: 'ptct',cityCode: 7900,area:4, topArea: 2};
+const gvtm = {cityKey: 'gvtm',cityCode: 6300,area:3, topArea: 2};
+
+const cities = [ramatGan, ptct, gvtm,telAviv]
+// const cities = [ptct]
+
 async function scrapeWebsite(url) {
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
@@ -66,19 +74,19 @@ async function scrapeApartment(url) {
     ).map((element) => element.textContent.trim());
     return {
       text: contentText.concat(frameWrapperText).join(" ").replace(/ +/g, " "),
-      images: imgSrcs,
+      images: imgSrcs.slice(0, 3),
     };
   });
 
   await browser.close();
-  console.log(scrapedText);
   return scrapedText;
 }
 
 const preparePost = async (post, city, hashedText, postUrl) => {
-  const object = await useGPT(post.text, ProvidersGPT.yad2);
-  if (!object) return null;
-  if (!object.price || !object.roomsNumber) return null;
+  const object = {}
+  // const object = await useGPT(post.text, ProvidersGPT.yad2);
+  // if (!object) return null;
+  // if (!object.price || !object.roomsNumber) return null;
   return {
     price: object.price,
     city: object.city || city,
@@ -105,23 +113,18 @@ const preparePost = async (post, city, hashedText, postUrl) => {
 // const websiteUrl = "https://www.yad2.co.il/item/gvxl61q7"; // Replace with the actual URL
 // scrapeApartment(websiteUrl);
 
-const apartmentsIds = [];
-let page = 1;
 
-const telAviv = 5000;
-const ramatGan = 8600;
-const ptct = 7900;
-const gvtm = 6300;
 
-const scrape = async () => {
+const scrape = async (city) => {
+  const apartmentsIds = [];
+  let page = 1;
   let notFound = false;
   while (!notFound) {
     try {
       const itemIds = await scrapeWebsite(
-        `https://www.yad2.co.il/realestate/rent?topArea=2&area=4&city=${ptct}&page=${page}`
+        `https://www.yad2.co.il/realestate/rent?topArea=${city.topArea}&area=${city.area}&city=${city.cityCode}&page=${page}`
       );
       apartmentsIds.push(...itemIds);
-      console.log(apartmentsIds);
       if (itemIds.length == 0) {
         notFound = true;
         break;
@@ -129,35 +132,41 @@ const scrape = async () => {
       page++;
     } catch {}
   }
-  console.log("finish", apartmentsIds);
+  return apartmentsIds;
 };
 
-scrape().then(async () => {
-  const promiseArray = [];
-  for (const id of apartmentsIds) {
-    try {
-      const existingListing = await DB.isListingExist(
-        `https://www.yad2.co.il/item/${id}`
-      );
-      console.log(`https://www.yad2.co.il/item/${id}`, existingListing);
-      if (existingListing) continue;
-      const scrapedText = await scrapeApartment(
-        `https://www.yad2.co.il/item/${id}`
-      );
-      promiseArray.push(
-        preparePost(
-          scrapedText,
-          "ptct",
-          "123",
+(async ()=>{
+  const total = {};
+  for(const city of cities){
+    total[city.cityCode] = {new: 0, exist: 0};
+    const apartmentsIds = await scrape(city);
+    for (const id of apartmentsIds) {
+      try {
+        const existingListing = await DB.isListingExist(
           `https://www.yad2.co.il/item/${id}`
-        )
-      );
-    } catch {}
+        );
+        if (existingListing) {
+          total[city.cityCode]['exist'] += 1; 
+          continue;
+        }
+        total[city.cityCode]['new'] += 1;
+        const scrapedText = await scrapeApartment(
+          `https://www.yad2.co.il/item/${id}`
+        );
+        prepareAndSaveScrape(id, scrapedText, city.cityKey);
+      } catch {}
+    }  
   }
-  const promiseSettled = await Promise.allSettled(promiseArray);
-  const resolvedPromises = promiseSettled.filter(
-    (result) => result.status === "fulfilled"
+  console.log('total', total)
+})()
+
+const prepareAndSaveScrape = async (itemId, scrapedObject, cityKey) => {
+  const post = await preparePost(
+    scrapedObject,
+    cityKey,
+    "123",
+    `https://www.yad2.co.il/item/${itemId}`
   );
-  const resolvedValues = resolvedPromises.map((result) => result.value);
-  await DB.createListings(resolvedValues);
-});
+  console.log('post', post)
+  await DB.createListings([post]);
+}

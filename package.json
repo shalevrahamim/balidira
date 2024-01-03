@@ -4,6 +4,7 @@
   "description": "A Telegram bot-driven service for personalized apartment listings, leveraging Node.js, Sequelize ORM, and Postgres for optimized user-centric apartment hunting experience",
   "scripts": {
     "start:scrapy": "node src/puppeteer.js",
+    "start:yad2": "node src/yad2.js",
     "start:telegram": "node src/telegram.js",
     "start:service": "node src/service.js",
     "start": "node src/service.js",

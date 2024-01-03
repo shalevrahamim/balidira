@@ -1,10 +1,10 @@
-// const DB = require("./db.js");
 require('dotenv').config()
+const DB = require("./db.js");
 const Telegram = require("./telegram.js");
 
 // const cron = require("node-cron");
 // const { scanAllGroups } = require("./puppeteer.js");
-// const { format } = require("date-fns");
+const { format } = require("date-fns");
 // const groups = [
 //   { city: "tlv", url: "https://www.facebook.com/groups/458499457501175/" },
 //   { city: "tlv", url: "https://www.facebook.com/groups/287564448778602/" },
@@ -56,7 +56,8 @@ function delay(ms) {
 //   const allUsers = {};
 //   const userNames = {};
 //   for (const listing of listings) {
-//     const users = await DB.getMatchingUsersForListing(listing);
+//     // const users = await DB.getMatchingUsersForListing(listing);
+//     const users = [{chat_id: '334337635', preferences: {name: 'shalev'}}]
 //     for (const user of users) {
 //       if (!allUsers[user.chat_id]) {
 //         allUsers[user.chat_id] = [];
@@ -67,8 +68,8 @@ function delay(ms) {
 //         isNotified: false,
 //       });
 //     }
-//     // listing.isNotified = true;
-//     // await listing.save();
+//     listing.isNotified = true;
+//     listing.save();
 //   }
 //   const formattedDate = format(Date.now(), "yyyy.MM.dd");
 //   const matchesListings = [];
@@ -79,13 +80,14 @@ function delay(ms) {
 //       listings: allUsers[chatId],
 //     });
 //   }
-//   console.log(allUsers[334337635].length);
 //   DB.createMatchListings(matchesListings);
 //   for (const match of matchesListings) {
 //     console.log(userNames[match.chat_id]);
 //     await Telegram.sendTotalFoundMessage(userNames[match.chat_id], match);
 //   }
 // };
+
+// createMatchListings();
 
 // cron.schedule("47 16 * * *", async () => {
 //   const users = await DB.getAllUsers();

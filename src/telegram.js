@@ -308,8 +308,7 @@ function delay(ms) {
 }
 
 const sendMessage = async (chatId, list) => {
-  if (!list.price) return;
-  const imageUrls = list.imagesUrls.filter((url) => url.includes("scontent"));
+  const imageUrls = list.imagesUrls.filter((url) => url.includes("scontent") || url.includes("yad2"));
   const price = list.price;
   const city = list.city;
   const type = list.type;
