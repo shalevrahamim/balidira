@@ -103,7 +103,7 @@ const anoucement = async () =>{
 
 // });
 
-cron.schedule("00 21 * * *", () => {
+cron.schedule("05 21 * * *", () => {
   createMatchListings();
 });
 
