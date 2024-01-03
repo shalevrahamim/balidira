@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer");
 const { useGPT, ProvidersGPT } = require("./chatgpt");
+const crypto = require("crypto");
 const DB = require("./db.js");
 
 const telAviv = {cityKey: 'tlv', cityCode: 5000,area:1, topArea: 2};
@@ -7,7 +8,7 @@ const ramatGan = {cityKey: 'rmg',cityCode: 8600,area:3, topArea: 2}
 const ptct = {cityKey: 'ptct',cityCode: 7900,area:4, topArea: 2};
 const gvtm = {cityKey: 'gvtm',cityCode: 6300,area:3, topArea: 2};
 
-const cities = [ramatGan, ptct, gvtm,telAviv]
+const cities = [telAviv, ramatGan, ptct, gvtm]
 // const cities = [ptct]
 
 async function scrapeWebsite(url) {
@@ -83,10 +84,9 @@ async function scrapeApartment(url) {
 }
 
 const preparePost = async (post, city, hashedText, postUrl) => {
-  const object = {}
-  // const object = await useGPT(post.text, ProvidersGPT.yad2);
-  // if (!object) return null;
-  // if (!object.price || !object.roomsNumber) return null;
+  const object = await useGPT(post.text, ProvidersGPT.yad2);
+  if (!object) return null;
+  if (!object.price || !object.roomsNumber) return null;
   return {
     price: object.price,
     city: object.city || city,
@@ -160,11 +160,17 @@ const scrape = async (city) => {
   console.log('total', total)
 })()
 
+function hashString(content) {
+  const hash = crypto.createHash("sha256");
+  hash.update(content);
+  return hash.digest("hex");
+}
+
 const prepareAndSaveScrape = async (itemId, scrapedObject, cityKey) => {
   const post = await preparePost(
     scrapedObject,
     cityKey,
-    "123",
+    hashString(scrapedObject.text),
     `https://www.yad2.co.il/item/${itemId}`
   );
   console.log('post', post)

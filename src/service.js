@@ -51,58 +51,61 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// const createMatchListings = async () => {
-//   const listings = await DB.getUnNotifiedListings();
-//   const allUsers = {};
-//   const userNames = {};
-//   for (const listing of listings) {
-//     // const users = await DB.getMatchingUsersForListing(listing);
-//     const users = [{chat_id: '334337635', preferences: {name: 'shalev'}}]
-//     for (const user of users) {
-//       if (!allUsers[user.chat_id]) {
-//         allUsers[user.chat_id] = [];
-//       }
-//       userNames[user.chat_id] = user.preferences.name;
-//       allUsers[user.chat_id].push({
-//         listingId: listing.id,
-//         isNotified: false,
-//       });
-//     }
-//     listing.isNotified = true;
-//     listing.save();
-//   }
-//   const formattedDate = format(Date.now(), "yyyy.MM.dd");
-//   const matchesListings = [];
-//   for (const chatId in allUsers) {
-//     matchesListings.push({
-//       period: formattedDate,
-//       chat_id: chatId,
-//       listings: allUsers[chatId],
-//     });
-//   }
-//   DB.createMatchListings(matchesListings);
-//   for (const match of matchesListings) {
-//     console.log(userNames[match.chat_id]);
-//     await Telegram.sendTotalFoundMessage(userNames[match.chat_id], match);
-//   }
-// };
+const createMatchListings = async () => {
+  const listings = await DB.getUnNotifiedListings();
+  const allUsers = {};
+  const userNames = {};
+  for (const listing of listings) {
+    const users = await DB.getMatchingUsersForListing(listing);
+    // const users = [{chat_id: '334337635', preferences: {name: 'shalev'}}]
+    for (const user of users) {
+      if (!allUsers[user.chat_id]) {
+        allUsers[user.chat_id] = [];
+      }
+      userNames[user.chat_id] = user.preferences.name;
+      allUsers[user.chat_id].push({
+        listingId: listing.id,
+        isNotified: false,
+      });
+    }
+    listing.isNotified = true;
+    listing.save();
+  }
+  const formattedDate = format(Date.now(), "yyyy.MM.dd");
+  const matchesListings = [];
+  for (const chatId in allUsers) {
+    matchesListings.push({
+      period: formattedDate,
+      chat_id: chatId,
+      listings: allUsers[chatId],
+    });
+  }
+  DB.createMatchListings(matchesListings);
+  for (const match of matchesListings) {
+    console.log(userNames[match.chat_id]);
+    await Telegram.sendTotalFoundMessage(userNames[match.chat_id], match);
+  }
+};
 
 // createMatchListings();
 
 // cron.schedule("47 16 * * *", async () => {
-//   const users = await DB.getAllUsers();
-//   for (const user of users) {
-//     Telegram.sendCustomMessage(
-//       user.chat_id,
-//       `השבוע הראשון נגמר ואני מתרגשת ברמות של כלה! 🤩\nאני משתדלת כל הזמן להשתפר ולדייק את עצמי עבור המשתמשים שלי ואני רוצה לשתף אתכם קצת ממה שהיה לנו השבוע:\n\n1. בעקבות תלונות שקצת חפרתי החלטתי מעכשיו לשלוח הודעת סיכום אחת ביום ולשלוח לכם את המודעות בצורה יותר נעימה ונוחה עבורכם.\n\n2. אם שמתם לב אתמול התחלתי לסרוק בנוסף גם את <b>יד 2!</b> זו אבן דרך משמעותית עבורי דרכה אני מוסיפה עוד מאות דירות כל יום להפצה!\nמה שמיוחד בסריקות של יד 2 זה שאני מראה אך ורק דירות <b>חדשות</b> מאותו היום בלבד, לא דירות מוקפצות.\nבנוסף כחלק ממאמצים למגר את תופעת התיווך החלטתי לא לספק מודעות ממומנות על ידי חברות תיווך ביד 2, לכן כל המודעות שתראו אצלי הינם מודעות חדשות ואוטנטיות בלבד.\n\nאני משתדלת תמיד להתעדכן ולהשתפר וכחלק מהמאצים אני תמיד אשמח לקבל פידבק, על ידי כתיבה של (/feedback) בצ'אט.\n\nובנימה אישית <b>${user?.preferences?.name}</b> אני רוצה לאחל לך שיהיה לך שבת שלום וחג שמח! 🌾🤍`
-//     );
-//     await delay(100);
-//   }
+const anoucement = async () =>{
+    const users = await DB.getAllUsers();
+    for (const user of users) {
+      Telegram.sendCustomMessage(
+        user.chat_id,
+        `היי <b>${user?.preferences?.name}</b>, אני חוזרת לעבוד בצורה מלאה ובכל הכוח, בקרוב אשלח לך דירות שמצאתי בשבילך, לבינתיים אני רוצה לאחל לך שנדע רק בשורות טובות, שקט ושחיילנו יחזרו בשלום לביתם`
+      );
+      await delay(100);
+  }
+}
+
 // });
 
-// cron.schedule("00 21 * * *", () => {
-//   createMatchListings();
-// });
+cron.schedule("00 21 * * *", () => {
+  createMatchListings();
+});
 
 // cron.schedule("10 21 * * *", () => {
 //   try {
@@ -204,3 +207,5 @@ function delay(ms) {
 // });
 
 Telegram.sendCustomMessage("334337635", "started");
+
+// anoucement()
