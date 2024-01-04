@@ -87,7 +87,7 @@ const createMatchListings = async () => {
   }
 };
 
-// createMatchListings();
+createMatchListings();
 
 // cron.schedule("47 16 * * *", async () => {
 const anoucement = async () =>{
