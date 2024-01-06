@@ -7,8 +7,9 @@ const telAviv = {cityKey: 'tlv', cityCode: 5000,area:1, topArea: 2};
 const ramatGan = {cityKey: 'rmg',cityCode: 8600,area:3, topArea: 2}
 const ptct = {cityKey: 'ptct',cityCode: 7900,area:4, topArea: 2};
 const gvtm = {cityKey: 'gvtm',cityCode: 6300,area:3, topArea: 2};
+const rzion = {cityKey: 'rzion',cityCode: 8300,area:9, topArea: 2};
 
-const cities = [telAviv, ramatGan, ptct, gvtm]
+const cities = [telAviv, ramatGan, ptct, rzion, gvtm]
 // const cities = [ptct]
 
 async function scrapeWebsite(url) {
