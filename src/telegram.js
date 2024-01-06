@@ -25,10 +25,6 @@ const citiesOptions = [
     { text: citiesKeys.rmg, callback_data: "rmg" },
     { text: citiesKeys.gvtm, callback_data: "gvtm" },
   ],
-  [
-    { text: citiesKeys.rmg, callback_data: "rmg" },
-    { text: citiesKeys.gvtm, callback_data: "gvtm" },
-  ],
   [{ text: "אישור", callback_data: "confirm" }],
 ];
 
