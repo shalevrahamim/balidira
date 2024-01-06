@@ -67,6 +67,25 @@ const priceRentOptions = [
   [{ text: "אישור", callback_data: "confirm" }],
 ];
 
+const extraOptions = [
+  [
+    { text: "מיזוג", callback_data: "airConditioner" },
+    { text: "מעלית", callback_data: "elevator" },
+    { text: "משופצת", callback_data: "renovated" },
+  ],
+  [
+    { text: "גישה לנכים", callback_data: "disabledAccess" },
+    { text: "ממ״ד", callback_data: "MMD" },
+    { text: "מחסן", callback_data: "storageRoom" },
+  ],
+  [
+    { text: "חיות מחמד", callback_data: "animals" },
+    { text: "ריהוט", callback_data: "equipment" },
+    { text: "כניסה מיידית", callback_data: "immediateEntry" },
+  ],
+  [{ text: "אישור", callback_data: "confirm" }],
+];
+
 // Replace 'YOUR_TELEGRAM_BOT_TOKEN' with your actual bot token
 const botToken = process.env.TELEGTAM_TOKEN;
 console.log("botToken", botToken);
@@ -75,12 +94,10 @@ const bot = new TelegramBot(botToken, { polling: true });
 const states = {
   WELCOME: "welcome",
   NAME: "name",
-  CITY: "city",
   CITY_MULTISELECT: "city_multiselect",
-  ROOMS: "rooms",
   ROOMS_MULTISELECT: "rooms_multiselect",
-  PRICE: "price",
   PRICE_MULTISELECT: "price_multiselect",
+  EXTRA_MULTISELECT: "extra_multiselect",
   FEEDBACK: "feedback",
   DONE: "done",
 };
@@ -196,6 +213,28 @@ bot.on("callback_query", async (query) => {
           user,
           priceRentOptions,
           "prices",
+          selectedOption
+        );
+        bot.editMessageReplyMarkup(updatedInlineKeyboard, {
+          chat_id: chatId,
+          message_id: query.message.message_id,
+        });
+      } else {
+        const options = {
+          reply_markup: {
+            inline_keyboard: extraOptions,
+          },
+        };
+        bot.sendMessage(chatId, translation.extraText, options);
+        moveToState(chatId, states.EXTRA_MULTISELECT);
+      }
+      break;
+    case states.EXTRA_MULTISELECT:
+      if (selectedOption != "confirm") {
+        const updatedInlineKeyboard = getUpdatedInlineKeyboard(
+          user,
+          extraOptions,
+          "extra",
           selectedOption
         );
         bot.editMessageReplyMarkup(updatedInlineKeyboard, {
