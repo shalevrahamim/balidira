@@ -73,9 +73,14 @@ async function scrapeApartment(url) {
     const contentText = Array.from(
       document.querySelectorAll(".wrapper_content")
     ).map((element) => element.textContent.trim());
+
+    const infoFeatureDivs = Array.from(document.querySelectorAll('.info_feature:not(.delete)'));
+    const infoText = infoFeatureDivs.map(div => div.textContent.trim()).join(', ');
+    console.log('infoText', infoText)
     return {
-      text: contentText.concat(frameWrapperText).join(" ").replace(/ +/g, " "),
+      text: contentText.concat(frameWrapperText).join(" ").replace(/ +/g, " ").concat('\nבדירה קיים: ' + infoText),
       images: imgSrcs.slice(0, 3),
+      infoText
     };
   });
 
@@ -130,6 +135,7 @@ const scrape = async (city) => {
         break;
       }
       page++;
+      break;
     } catch {}
   }
   return apartmentsIds;
@@ -145,17 +151,20 @@ const scrape = async (city) => {
         const existingListing = await DB.isListingExist(
           `https://www.yad2.co.il/item/${id}`
         );
-        if (existingListing) {
-          total[city.cityCode]['exist'] += 1; 
-          continue;
-        }
+        // if (existingListing) {
+        //   total[city.cityCode]['exist'] += 1; 
+        //   continue;
+        // }
         total[city.cityCode]['new'] += 1;
         const scrapedText = await scrapeApartment(
           `https://www.yad2.co.il/item/${id}`
         );
+        console.log('scrapedText', scrapedText.text)
+        break;
         prepareAndSaveScrape(id, scrapedText, city.cityKey);
       } catch {}
     }  
+    break;
   }
   console.log('total', total)
 })()
