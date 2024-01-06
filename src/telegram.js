@@ -18,12 +18,12 @@ const citiesOptions = [
     { text: citiesKeys.tlv, callback_data: "tlv" }
   ],
   [
-    { text: citiesKeys.rzion, callback_data: "rzion" },
-    { text: citiesKeys.ptct, callback_data: "ptct" },
-  ],
-  [
     { text: citiesKeys.rmg, callback_data: "rmg" },
     { text: citiesKeys.gvtm, callback_data: "gvtm" },
+  ],
+  [
+    { text: citiesKeys.rzion, callback_data: "rzion" },
+    { text: citiesKeys.ptct, callback_data: "ptct" },
   ],
   [{ text: "אישור", callback_data: "confirm" }],
 ];
