@@ -205,6 +205,6 @@ const anoucement = async () =>{
 //     scanAllGroups(slicedGroup);
 //   } catch {}
 // });
-Telegram.sendCustomMessage("334337635", "started");
+Telegram.sendCustomMessage("2073551658", "hello shemesh");
 
 // anoucement()
