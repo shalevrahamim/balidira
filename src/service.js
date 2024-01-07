@@ -205,8 +205,6 @@ const anoucement = async () =>{
 //     scanAllGroups(slicedGroup);
 //   } catch {}
 // });
-DB.getListing('fcdb1ba5-860d-4657-96c6-1f9b18bf6471').then((listing) => {
-  Telegram.sendMessage("334337635", listing);
-})
+Telegram.sendCustomMessage("334337635", "started");
 
 // anoucement()
