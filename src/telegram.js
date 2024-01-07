@@ -2,6 +2,7 @@ const TelegramBot = require("node-telegram-bot-api");
 const translation = require("./translation.js");
 const DB = require("./db.js");
 const { cloneDeep } = require("lodash");
+const { format } = require("date-fns");
 
 let chatStates = {};
 
@@ -257,13 +258,14 @@ bot.on("callback_query", async (query) => {
     case states.FEEDBACK:
     case states.DONE:
       if (selectedOption.includes("listings_")) {
+        const MAXIMUM_NOTIFY = 1;
         const period = selectedOption.slice(selectedOption.indexOf("_") + 1);
         const matchListing = await DB.getMatchListing(chatId, period);
         if (!matchListing) return;
         const listings = cloneDeep(matchListing.listings);
         let notifiedListings = 0;
         for (const listing of listings) {
-          if (notifiedListings >= 3) break;
+          if (notifiedListings >= MAXIMUM_NOTIFY) break;
           if (listing.isNotified) continue;
           listing.isNotified = true;
           const listingObj = await DB.getListing(listing.listingId);
@@ -275,12 +277,6 @@ bot.on("callback_query", async (query) => {
         ).length;
         matchListing.listings = listings;
         await matchListing.save();
-        console.log(
-          "***press more listings",
-          chatId,
-          listings.length,
-          unNotifiedListingsLength
-        );
         if (unNotifiedListingsLength != 0)
           sendMoreListings(chatId, unNotifiedListingsLength, period);
         else sendCustomMessage(chatId, "לא נותרו דירות להצגה ליום זה");
@@ -360,20 +356,20 @@ const extraApartmentDetails = (list) => {
   const renovated = list.renovated;
   const disabledAccess = list.disabledAccess;
   const MMD = list.MMD;
+  const isRoommates = list.isRoommates;
   const storageRoom = list.storageRoom;
   const animals = list.animals;
   const equipment = list.equipment;
   const balcony = list.balcony;
   const parking = list.parking;
   const immediateEntry = list.immediateEntry;
-  return `<b>מאפיינים נוספים:</b>\n${airConditioner ? `מיזוג\n` : ""}${elevator ? `מעלית\n` : ""}${renovated ? `משופצת\n` : ""}${disabledAccess ? `יש גישה לנכים\n` : ""}${MMD ? `ממ״ד\n` : ""}${storageRoom ? `יש מחסן\n` : ""}${animals ? `מותר בעלי חיים\n` : ""}${equipment ? `כולל ריהוט\n` : ""}${balcony ? `יש מרפסת\n` : ""}${parking ? `קיים חנייה\n` : ""}${immediateEntry ? `כניסה מיידית\n` : ""}`
+  return `<b>מאפיינים נוספים:</b>\n${isRoommates ? `👥 מתאים לשותפים       ` : ""}${airConditioner ? `❄️ מיזוג       ` : ""}${elevator ? `🛗 מעלית       ` : ""}${renovated ? `🔨 משופצת       ` : ""}${disabledAccess ? `♿️ גישה לנכים       ` : ""}${MMD ? `🛐 ממ״ד       ` : ""}${storageRoom ? `📦 יש מחסן       ` : ""}${animals ? `🐶 מותר בעלי חיים       ` : ""}${equipment ? `🪑 ריהוט       ` : ""}${balcony ? `🎑 מרפסת       ` : ""}${parking ? `🅿️ חנייה       ` : ""}${immediateEntry ? `⏲️ כניסה מיידית       ` : ""}\n`
 }
 
 const sendMessage = async (chatId, list) => {
   const imageUrls = list.imagesUrls.filter((url) => url.includes("scontent") || url.includes("yad2"));
   const price = list.price;
   const city = list.city;
-  const type = list.type;
   const squareSize = list.squareSize;
   const rooms = list.rooms;
   const location = list.location;
@@ -383,21 +379,19 @@ const sendMessage = async (chatId, list) => {
   const contact = list.contact;
   const entryDate = list.entryDate;
   const postUrl = list.postUrl;
+  const createdAt = list.createdAt;
   try {
     await sendArrayImages(chatId, imageUrls);
     await bot.sendMessage(
       chatId,
-      `${isBroker ? "<b>🚨 מתיווך 🚨</b>\n" : ""}${
-        "rent-roommates" == type ? `<b>מתאים לשותפים 👥</b>\n\n` : "\n"
-      }מיקום: <b>${citiesKeys[city]}${location ? `, ${location}` : ""}</b>\n${
-        rooms ? `מספר חדרים: <b>${rooms}</b>\n` : ""
-      }${squareSize ? `גודל: <b>${squareSize} מטר רבוע</b>\n` : ""}${
-        floor ? `קומה: <b>${floor}</b>\n` : ""
-      }${proximity ? `בקרבת: <b>${proximity}</b>\n` : ""}${
-        entryDate ? `תאריך כניסה: <b>${entryDate}</b>\n` : ""
-      }${extraApartmentDetails(list)}\n\n${price ? `מחיר: <b>${price} 🤑</b>\n` : ""}${
-        contact ? `יצירת קשר: <b>${contact} ☎️</b>` : ""
-      }\n\n${postUrl}`,
+      `${format(createdAt, "dd.MM.yyyy")}\n\n${isBroker ? "<b>🚨 מתיווך 🚨</b>\n" : ""}<b>מיקום:</b> ${citiesKeys[city]}${location ? `, ${location}\n` : ""}${price ? `<b>מחיר:</b> ${price} 🤑\n` : ""}${
+        contact ? `<b>יצירת קשר:</b> ${contact} ☎️\n` : ""
+      }\n${rooms ? `<b>מספר חדרים:</b> ${rooms}\n` : ""
+      }${squareSize ? `<b>גודל:</b> ${squareSize} מטר רבוע\n` : ""}${
+        floor ? `<b>קומה:</b> ${floor}\n` : ""
+      }${proximity ? `<b>בקרבת:</b> ${proximity}\n` : ""}${
+        entryDate ? `<b>תאריך כניסה:</b> ${entryDate}\n` : ""
+      }\n${extraApartmentDetails(list)}\n\n${postUrl}`,
       { parse_mode: "HTML" }
     );
     await delay(300);
