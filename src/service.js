@@ -56,8 +56,8 @@ const createMatchListings = async () => {
   const allUsers = {};
   const userNames = {};
   for (const listing of listings) {
-    //const users = await DB.getMatchingUsersForListing(listing);
-    const users = [{chat_id: '334337635', preferences: {name: 'shalev'}}]
+    const users = await DB.getMatchingUsersForListing(listing);
+    // const users = [{chat_id: '334337635', preferences: {name: 'shalev'}}]
     for (const user of users) {
       if (!allUsers[user.chat_id]) {
         allUsers[user.chat_id] = [];
