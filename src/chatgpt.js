@@ -44,14 +44,15 @@ const yad2Example = `יהודה עמיחי 6 תכנית ל', למד, תל אבי
 
  חניות
 
- 2`;
+ 2
+ 
+ בדירה קיים: לשותפים, סורגים, מחסן, דוד שמש, ממ״ד, משופצת, חיות מחמד, מזגן תדיראן`;
 
-const yad2Result = `{"price": 13500, "isRoommates": false, "city": "tlv", "squareMeter": 125, "roomsNumber": 4, "location": "יהודה עמיחי 6 תכנית ל', למד", "proximity": "מרחק הליכה קצרה מהים", "floor": 7, "isBroker": false, "contact": null, "entryDate": "כניסה מיידית"}`;
+const yad2Result = `{"price": 13500, "isRoommates": true, "city": "tlv", "squareMeter": 125, "roomsNumber": 4, "location": "יהודה עמיחי 6 תכנית ל', למד", "proximity": "מרחק הליכה קצרה מהים", "floor": 7, "isBroker": false, "contact": null, "entryDate": "כניסה מיידית", "airConditioner": true, "elevator": false, "renovated": true, "disabledAccess": false, "MMD": true, "storageRoom": true, "animals": true, "equipment": false, "balcony": true, "parking": true, "immediateEntry": true }`;
 
 const ProvidersGPT = { yad2: "yad2", facebook: "facebook" };
 
 const useGPT = async (content, provider) => {
-  console.log(content, provider);
   const apiKey = process.env.OPENAI_KEY;
   const contentExample =
     "*הורדת מחיר*  בעקבות מעבר לחול מפנה את הדירה שלי בתל אביב אחרי עשר שנים! דירת קרקע במרכז ממוקמת בדב הז (פינת גורדון,בין דיזינגוף לבן יהודה). קרוב לחוף הים ולכיכר דיזינגוף. מרכזית ושקטה. שכירות ₪6,300 שח לחודש, אין ועד בית, חשבונות נמוכים. גדולה-כ60 מ״ר. מתאימה לזוג/שותפים. כניסה וחידוש חוזה ב19/09. ללא תיווך. יש חצר לדירה  וקודן לבניין. הדירה מסורגת. שתיים וחצי חדרים גדולים- סלון ,חדר שינה, מטבח ,שירותים ומקלחת בנפרד  בעל הדירה מקסים! *תנתן עדיפות*  למי שיקנה את  הריהוט של הבית/חלקו.  מראה הסופש ובראשון. לתיאום ופרטים נוספים בפרטי מרום 0548161226";
@@ -67,7 +68,7 @@ const useGPT = async (content, provider) => {
     },
     {
       role: "user",
-      content: `I will give you aparment listing content and you will extract the following properties.\nrules: remove double quetes from text. returned value should be valid json.\nreturned object structure: {price:integer, squareMeter:integer, roomsNumber:double, location:string, isRoommates: boolean, city:string, proximity:string, floor:string, isBroker:boolean, contact:string, entryDate:string}.\ndefault values: {price:null, squareMeter:null, roomsNumber:null, location:null, city:(רמת גן = rmg, תל אביב = tlv, גבעתיים = gvtm, פתח תקווה = ptct if not exist then null), floor:null, proximity:null, isRoommates: false, isBroker:false, contact:null, entryDate:null}.\n this is the listing: ${
+      content: `I will give you aparment listing content and you will extract the following properties.\nrules: remove double quetes from text. returned value should be valid json.\nreturned object structure: {price:integer, squareMeter:integer, roomsNumber:double, location:string, isRoommates: boolean, city:string, proximity:string, floor:string, isBroker:boolean, contact:string, entryDate:string, airConditioner: boolean, elevator: boolean, renovated: boolean, disabledAccess: boolean, MMD: boolean, storageRoom: boolean, animals: boolean, equipment: boolean, balcony: boolean, parking: boolean, immediateEntry: boolean}.\ndefault values: {price:null, squareMeter:null, roomsNumber:null, location:null, city:(רמת גן = rmg, תל אביב = tlv, גבעתיים = gvtm, פתח תקווה = ptct if not exist then null), floor:null, proximity:null, isRoommates: false, isBroker:false, contact:null, entryDate:null, airConditioner: false, elevator: false, renovated: false, disabledAccess: false, MMD: false, storageRoom: false, animals: false, equipment: false, balcony: false, parking: false, immediateEntry: false}.\n translations: {immediateEntry: "כניסה מיידית", storageRoom: "מחסן", MMD: "ממ״ד" } this is the listing: ${
         provider == ProvidersGPT.yad2 ? yad2Example : contentExample
       }`,
     },
@@ -82,7 +83,6 @@ const useGPT = async (content, provider) => {
   ];
 
   console.log("gpt start");
-  console.log(conversation);
   const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo", // Use the "model" parameter instead of "engine"
     messages: conversation,
@@ -90,8 +90,6 @@ const useGPT = async (content, provider) => {
   });
   console.log("gpt end");
   console.log(response.usage);
-
-  console.log(parseObjectString(response.choices[0].message.content));
   return parseObjectString(response.choices[0].message.content);
 };
 
@@ -101,7 +99,6 @@ function parseObjectString(inputString) {
       .replace(/\s+/g, " ") // Replace consecutive spaces with a single space
       .replace(/\\n/g, ""); // Remove escaped newlines
     const objectString = cleanedString.match(/\{(.|\n)*\}/)[0]; // Extract the object part using regex
-    console.log("objectString", objectString);
     const parsedObject = JSON.parse(objectString); // Parse the extracted object
 
     return parsedObject;

@@ -8,6 +8,7 @@ const translation = {
   howMuchRoom: "כמה חדרים? (ניתן לבחור מספר אופציות)",
   roomsOptions: "1,1.5,2,2.5,3,3.5,4,5,6",
   howMuchPrice: "מה טווח המחירים שמתאים לך? (ניתן לבחור מספר אופציות)",
+  extraText: "האם יש תעדופים נוספים שחשובים לך?",
   gettingStarted:
     "מעולה 🤩 אני יודעת מספיק בשביל להתחיל להביא לך דירות.\nבכל יום אשלח לך בשעות הערב סיכום של כל הדירות שסרקתי באותו היום.\n\nעל מנת להגיע לתפריט יש לכתוב ('/') בצ'אט ולבחור באופציה הרצויה.",
   feedback:

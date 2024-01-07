@@ -9,8 +9,7 @@ const ptct = {cityKey: 'ptct',cityCode: 7900,area:4, topArea: 2};
 const gvtm = {cityKey: 'gvtm',cityCode: 6300,area:3, topArea: 2};
 const rzion = {cityKey: 'rzion',cityCode: 8300,area:9, topArea: 2};
 
-const cities = [telAviv, ramatGan, ptct, rzion, gvtm]
-// const cities = [ptct]
+const cities = [telAviv, ramatGan, ptct, gvtm]
 
 async function scrapeWebsite(url) {
   const browser = await puppeteer.launch({ headless: false });
@@ -74,9 +73,14 @@ async function scrapeApartment(url) {
     const contentText = Array.from(
       document.querySelectorAll(".wrapper_content")
     ).map((element) => element.textContent.trim());
+
+    const infoFeatureDivs = Array.from(document.querySelectorAll('.info_feature:not(.delete)'));
+    const infoText = infoFeatureDivs.map(div => div.textContent.trim()).join(', ');
+    console.log('infoText', infoText)
     return {
-      text: contentText.concat(frameWrapperText).join(" ").replace(/ +/g, " "),
+      text: contentText.concat(frameWrapperText).join(" ").replace(/ +/g, " ").concat('\nבדירה קיים: ' + infoText),
       images: imgSrcs.slice(0, 3),
+      infoText
     };
   });
 
@@ -92,7 +96,7 @@ const preparePost = async (post, city, hashedText, postUrl) => {
     price: object.price,
     city: object.city || city,
     provider: "yad2",
-    type: object.isRoommates ? "rent-roommates" : "rent",
+    type: "rent",
     squareSize: object.squareMeter,
     rooms: object.roomsNumber,
     location: object.location,
@@ -100,10 +104,22 @@ const preparePost = async (post, city, hashedText, postUrl) => {
     isNotified: false,
     floor: object.floor ? String(object.floor) : null,
     isBroker: object.isBroker,
+    isRoommates: object.isRoommates,
     contact: object.contact,
     entryDate: object.entryDate,
     moreDetails: object.moreDetails,
     originalContent: post.text,
+    airConditioner: object.airConditioner,
+    elevator: object.elevator,
+    renovated: object.renovated,
+    disabledAccess: object.disabledAccess,
+    MMD: object.MMD,
+    storageRoom: object.storageRoom,
+    animals: object.animals,
+    equipment: object.equipment,
+    balcony: object.balcony,
+    parking: object.parking,
+    immediateEntry: object.immediateEntry,
     originalContentHash: postUrl,
     imagesUrls: post.images,
     postUrl: postUrl,
@@ -156,7 +172,7 @@ const scrape = async (city) => {
         );
         prepareAndSaveScrape(id, scrapedText, city.cityKey);
       } catch {}
-    }  
+    }
   }
   console.log('total', total)
 })()
