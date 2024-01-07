@@ -9,8 +9,7 @@ const ptct = {cityKey: 'ptct',cityCode: 7900,area:4, topArea: 2};
 const gvtm = {cityKey: 'gvtm',cityCode: 6300,area:3, topArea: 2};
 const rzion = {cityKey: 'rzion',cityCode: 8300,area:9, topArea: 2};
 
-const cities = [telAviv, ramatGan, ptct, rzion, gvtm]
-// const cities = [ptct]
+const cities = [telAviv, ramatGan, ptct, gvtm]
 
 async function scrapeWebsite(url) {
   const browser = await puppeteer.launch({ headless: false });
@@ -97,7 +96,7 @@ const preparePost = async (post, city, hashedText, postUrl) => {
     price: object.price,
     city: object.city || city,
     provider: "yad2",
-    type: object.isRoommates ? "rent-roommates" : "rent",
+    type: "rent",
     squareSize: object.squareMeter,
     rooms: object.roomsNumber,
     location: object.location,
@@ -105,10 +104,22 @@ const preparePost = async (post, city, hashedText, postUrl) => {
     isNotified: false,
     floor: object.floor ? String(object.floor) : null,
     isBroker: object.isBroker,
+    isRoommates: object.isRoommates,
     contact: object.contact,
     entryDate: object.entryDate,
     moreDetails: object.moreDetails,
     originalContent: post.text,
+    airConditioner: object.airConditioner,
+    elevator: object.elevator,
+    renovated: object.renovated,
+    disabledAccess: object.disabledAccess,
+    MMD: object.MMD,
+    storageRoom: object.storageRoom,
+    animals: object.animals,
+    equipment: object.equipment,
+    balcony: object.balcony,
+    parking: object.parking,
+    immediateEntry: object.immediateEntry,
     originalContentHash: postUrl,
     imagesUrls: post.images,
     postUrl: postUrl,
@@ -136,7 +147,6 @@ const scrape = async (city) => {
         break;
       }
       page++;
-      break;
     } catch {}
   }
   return apartmentsIds;
@@ -152,20 +162,17 @@ const scrape = async (city) => {
         const existingListing = await DB.isListingExist(
           `https://www.yad2.co.il/item/${id}`
         );
-        // if (existingListing) {
-        //   total[city.cityCode]['exist'] += 1; 
-        //   continue;
-        // }
+        if (existingListing) {
+          total[city.cityCode]['exist'] += 1; 
+          continue;
+        }
         total[city.cityCode]['new'] += 1;
         const scrapedText = await scrapeApartment(
           `https://www.yad2.co.il/item/${id}`
         );
-        console.log('scrapedText', scrapedText.text)
-        break;
         prepareAndSaveScrape(id, scrapedText, city.cityKey);
       } catch {}
-    }  
-    break;
+    }
   }
   console.log('total', total)
 })()

@@ -98,6 +98,10 @@ const Listing = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    isRoommates: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     contact: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -105,6 +109,50 @@ const Listing = sequelize.define(
     entryDate: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    airConditioner: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    elevator: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    renovated: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    disabledAccess: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    MMD: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    storageRoom: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    animals: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    equipment: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    balcony: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    parking: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    immediateEntry: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     moreDetails: {
       type: DataTypes.TEXT,

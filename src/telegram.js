@@ -87,6 +87,10 @@ const extraOptions = [
     { text: "ריהוט", callback_data: "equipment" },
     { text: "כניסה מיידית", callback_data: "immediateEntry" },
   ],
+  [
+    { text: "חניה", callback_data: "parking" },
+    { text: "מרפסת", callback_data: "balcony"},
+  ]
   [{ text: "אישור", callback_data: "confirm" }],
 ];
 
@@ -350,6 +354,21 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const extraApartmentDetails = (list) => {
+  const airConditioner = list.airConditioner;
+  const elevator = list.elevator;
+  const renovated = list.renovated;
+  const disabledAccess = list.disabledAccess;
+  const MMD = list.MMD;
+  const storageRoom = list.storageRoom;
+  const animals = list.animals;
+  const equipment = list.equipment;
+  const balcony = list.balcony;
+  const parking = list.parking;
+  const immediateEntry = list.immediateEntry;
+  return `<b>מאפיינים נוספים:</b>\n${airConditioner ? `מיזוג\n` : ""}${elevator ? `מעלית\n` : ""}${renovated ? `משופצת\n` : ""}${disabledAccess ? `יש גישה לנכים\n` : ""}${MMD ? `ממ״ד\n` : ""}${storageRoom ? `יש מחסן\n` : ""}${animals ? `מותר בעלי חיים\n` : ""}${equipment ? `כולל ריהוט\n` : ""}${balcony ? `יש מרפסת\n` : ""}${parking ? `קיים חנייה\n` : ""}${immediateEntry ? `כניסה מיידית\n` : ""}`
+}
+
 const sendMessage = async (chatId, list) => {
   const imageUrls = list.imagesUrls.filter((url) => url.includes("scontent") || url.includes("yad2"));
   const price = list.price;
@@ -376,7 +395,7 @@ const sendMessage = async (chatId, list) => {
         floor ? `קומה: <b>${floor}</b>\n` : ""
       }${proximity ? `בקרבת: <b>${proximity}</b>\n` : ""}${
         entryDate ? `תאריך כניסה: <b>${entryDate}</b>\n` : ""
-      }\n${price ? `מחיר: <b>${price} 🤑</b>\n` : ""}${
+      }${extraApartmentDetails(list)}\n\n${price ? `מחיר: <b>${price} 🤑</b>\n` : ""}${
         contact ? `יצירת קשר: <b>${contact} ☎️</b>` : ""
       }\n\n${postUrl}`,
       { parse_mode: "HTML" }
