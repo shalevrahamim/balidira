@@ -87,8 +87,6 @@ const createMatchListings = async () => {
   }
 };
 
-createMatchListings();
-
 // cron.schedule("47 16 * * *", async () => {
 const anoucement = async () =>{
     const users = await DB.getAllUsers();
@@ -103,9 +101,9 @@ const anoucement = async () =>{
 
 // });
 
-// cron.schedule("05 21 * * *", () => {
-//   createMatchListings();
-// });
+cron.schedule("00 22 * * *", () => {
+  createMatchListings();
+});
 
 // cron.schedule("10 21 * * *", () => {
 //   try {
