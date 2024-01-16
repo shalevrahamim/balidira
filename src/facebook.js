@@ -1,5 +1,5 @@
 const puppeteer = require("puppeteer");
-const { useGPT, ProvidersGPT } = require("./chatgpt");
+const { useGPT, ProvidersGPT } = require("./chatgpt.js");
 const crypto = require("crypto");
 const DB = require("./db.js");
 
