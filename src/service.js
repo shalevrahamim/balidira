@@ -103,9 +103,9 @@ const anoucement = async () =>{
 
 // });
 
-// cron.schedule("05 21 * * *", () => {
-//   createMatchListings();
-// });
+cron.schedule("00 22 * * *", () => {
+  createMatchListings();
+});
 
 // cron.schedule("10 21 * * *", () => {
 //   try {
