@@ -100,7 +100,7 @@ const anoucement = async () =>{
 }
 
 // });
-
+createMatchListings();
 cron.schedule("00 22 * * *", () => {
   createMatchListings();
 });
