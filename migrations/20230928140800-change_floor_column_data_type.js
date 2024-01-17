@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -7,7 +7,7 @@ module.exports = {
     await queryInterface.changeColumn('listings', 'floor', {
       type: Sequelize.STRING,
       allowNull: true, // Modify this based on your requirements
-    });
+    })
   },
 
   down: async (queryInterface, Sequelize) => {
@@ -15,6 +15,6 @@ module.exports = {
     await queryInterface.changeColumn('listings', 'floor', {
       type: Sequelize.INTEGER,
       allowNull: true, // Modify this based on your requirements
-    });
+    })
   },
-};
+}

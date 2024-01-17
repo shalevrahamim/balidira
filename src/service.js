@@ -1,10 +1,10 @@
 require('dotenv').config()
-const DB = require("./db.js");
-const Telegram = require("./telegram.js");
+const DB = require('./db.js')
+const Telegram = require('./telegram.js')
 
-const cron = require("node-cron");
+const cron = require('node-cron')
 // const { scanAllGroups } = require("./puppeteer.js");
-const { format } = require("date-fns");
+const { format } = require('date-fns')
 // const groups = [
 //   { city: "tlv", url: "https://www.facebook.com/groups/458499457501175/" },
 //   { city: "tlv", url: "https://www.facebook.com/groups/287564448778602/" },
@@ -48,56 +48,64 @@ const { format } = require("date-fns");
 // ];
 
 function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 const createMatchListings = async () => {
-  const listings = await DB.getUnNotifiedListings();
-  const allUsers = {};
-  const userNames = {};
+  const listings = await DB.getUnNotifiedListings()
+  const allUsers = {}
+  const userNames = {}
   for (const listing of listings) {
-    const users = await DB.getMatchingUsersForListing(listing);
-    // const users = [{chat_id: '334337635', preferences: {name: 'shalev'}}]
+    let users
+    if (process.env.NODE_ENV === 'dev') {
+      users = [
+        { chat_id: process.env.CHAT_ID, preferences: { name: 'shalev' } },
+      ]
+    }
+    users = await DB.getMatchingUsersForListing(listing)
     for (const user of users) {
       if (!allUsers[user.chat_id]) {
-        allUsers[user.chat_id] = [];
+        allUsers[user.chat_id] = []
       }
-      userNames[user.chat_id] = user.preferences.name;
+      userNames[user.chat_id] = user.preferences.name
       allUsers[user.chat_id].push({
         listingId: listing.id,
         isNotified: false,
-      });
+      })
     }
-    listing.isNotified = true;
-    listing.save();
+    listing.isNotified = true
+    listing.save()
   }
-  const formattedDate = format(Date.now(), "yyyy.MM.dd");
-  const matchesListings = [];
+  const formattedDate = format(Date.now(), 'yyyy.MM.dd')
+  const matchesListings = []
   for (const chatId in allUsers) {
     matchesListings.push({
       period: formattedDate,
       chat_id: chatId,
       listings: allUsers[chatId],
-    });
+    })
   }
-  DB.createMatchListings(matchesListings);
+  DB.createMatchListings(matchesListings)
   for (const match of matchesListings) {
-    console.log(userNames[match.chat_id]);
-    await Telegram.sendTotalFoundMessage(userNames[match.chat_id], match);
+    console.log(userNames[match.chat_id])
+    await Telegram.sendTotalFoundMessage(userNames[match.chat_id], match)
   }
-};
+}
 
-createMatchListings();
+const getListing = async (chatId) => {
+  const listing = await DB.getListing('bf4d5ae8-e001-41fa-96b1-b7b70be52227')
+  await Telegram.sendMessage(chatId, listing)
+}
 
 // cron.schedule("47 16 * * *", async () => {
-const anoucement = async () =>{
-    const users = await DB.getAllUsers();
-    for (const user of users) {
-      Telegram.sendCustomMessage(
-        user.chat_id,
-        `היי <b>${user?.preferences?.name}</b>, אני חוזרת לעבוד בצורה מלאה ובכל הכוח, בקרוב אשלח לך דירות שמצאתי בשבילך, לבינתיים אני רוצה לאחל לך שנדע רק בשורות טובות, שקט ושחיילנו יחזרו בשלום לביתם`
-      );
-      await delay(100);
+const anoucement = async () => {
+  const users = await DB.getAllUsers()
+  for (const user of users) {
+    Telegram.sendCustomMessage(
+      user.chat_id,
+      `היי <b>${user?.preferences?.name}</b>, אני חוזרת לעבוד בצורה מלאה ובכל הכוח, בקרוב אשלח לך דירות שמצאתי בשבילך, לבינתיים אני רוצה לאחל לך שנדע רק בשורות טובות, שקט ושחיילנו יחזרו בשלום לביתם`
+    )
+    await delay(100)
   }
 }
 
@@ -205,6 +213,6 @@ const anoucement = async () =>{
 //     scanAllGroups(slicedGroup);
 //   } catch {}
 // });
-Telegram.sendCustomMessage("334337635", "started");
+getListing('6639685529')
 
 // anoucement()
